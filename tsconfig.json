@@ -29,7 +29,8 @@
       "@plugins/*": ["src/plugins/*"],
       "@routes/*": ["src/routes/*"],
       "@utils/*": ["src/utils/*"],
-      "@decorators/*": ["src/decorators/*"]
+      "@decorators/*": ["src/decorators/*"],
+      "@context/*": ["src/context/*"]
     }
   },
   "include": ["src/**/*", "test/**/*"],

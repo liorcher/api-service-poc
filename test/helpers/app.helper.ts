@@ -19,7 +19,7 @@ export async function buildTestApp(options: FastifyServerOptions = {}): Promise<
   fastify.setErrorHandler(errorHandler);
 
   const mockDb = createMockDb() as Db;
-  setupContainer(mockDb, testLogger as any);
+  setupContainer(mockDb, testLogger);
 
   await fastify.register(registerRoutes);
   await fastify.ready();

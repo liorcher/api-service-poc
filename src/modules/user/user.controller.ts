@@ -1,19 +1,21 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { Logger as PinoLogger } from 'pino';
+import { FastifyBaseLogger } from 'fastify';
 import { IUserService } from './interfaces/user-service.interface.js';
 import { CreateUserDto, UpdateUserDto } from './user.schema.js';
 import { LogMethod } from '@decorators/log-method.decorator.js';
-import { Logger } from '@decorators/logger.decorator.js';
+import { container } from '@di/container.js';
 
 interface UserIdParams {
   id: string;
 }
 
 export class UserController {
-  @Logger()
-  private readonly logger!: PinoLogger;
+  private readonly logger: FastifyBaseLogger;
 
-  constructor(private readonly userService: IUserService) {}
+  constructor(private readonly userService: IUserService, logger?: FastifyBaseLogger) {
+    const parentLogger = logger || container.resolve<FastifyBaseLogger>('logger');
+    this.logger = parentLogger.child({ className: 'UserController' });
+  }
 
   @LogMethod()
   async getAllUsers(_request: FastifyRequest, reply: FastifyReply): Promise<void> {

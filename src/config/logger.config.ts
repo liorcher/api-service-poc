@@ -10,7 +10,9 @@ export const loggerConfig: FastifyServerOptions['logger'] = {
         options: {
           translateTime: 'HH:MM:ss Z',
           ignore: 'pid,hostname',
-          messageFormat: '{levelLabel} [{className}] [{method}] [{reqId}] {msg}'
+          singleLine: false,
+          colorize: true,
+          messageFormat: '{if className}[{className}]{end}{if method}[{method}]{end}{if reqId}[{reqId}]{end} {msg}'
         }
       }
     : undefined,

@@ -4,10 +4,7 @@ import { loggerConfig } from '@config/index.js';
 import mongodbPlugin from '@plugins/mongodb.js';
 import { registerRoutes } from '@routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
-import {
-  requestLoggingMiddleware,
-  requestCompletedHook
-} from './middleware/request-logging.middleware.js';
+import { requestContextMiddleware } from './middleware/request-context.middleware.js';
 
 export async function buildApp(options: FastifyServerOptions = {}): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -16,10 +13,9 @@ export async function buildApp(options: FastifyServerOptions = {}): Promise<Fast
     ...options
   });
 
-  fastify.setErrorHandler(errorHandler);
+  fastify.addHook('onRequest', requestContextMiddleware);
 
-  fastify.addHook('preHandler', requestLoggingMiddleware);
-  fastify.addHook('onResponse', requestCompletedHook);
+  fastify.setErrorHandler(errorHandler);
 
   await fastify.register(mongodbPlugin);
 

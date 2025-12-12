@@ -1,16 +1,18 @@
 import { ObjectId } from 'mongodb';
-import { Logger as PinoLogger } from 'pino';
+import { FastifyBaseLogger } from 'fastify';
 import { IUserRepository } from './interfaces/user-repository.interface.js';
 import { IUserService } from './interfaces/user-service.interface.js';
 import { User, CreateUserDto, UpdateUserDto } from './user.schema.js';
 import { LogMethod } from '@decorators/log-method.decorator.js';
-import { Logger } from '@decorators/logger.decorator.js';
+import { container } from '@di/container.js';
 
 export class UserService implements IUserService {
-  @Logger()
-  private readonly logger!: PinoLogger;
+  private readonly logger: FastifyBaseLogger;
 
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(private readonly userRepository: IUserRepository, logger?: FastifyBaseLogger) {
+    const parentLogger = logger || container.resolve<FastifyBaseLogger>('logger');
+    this.logger = parentLogger.child({ className: 'UserService' });
+  }
 
   @LogMethod()
   async getAllUsers(): Promise<User[]> {

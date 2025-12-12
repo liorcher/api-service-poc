@@ -1,21 +1,16 @@
 import { UserService } from '@modules/user/user.service.js';
-import { UserRepository } from '@modules/user/user.repository.js';
+import { IUserRepository } from '@modules/user/interfaces/user-repository.interface.js';
 import { ObjectId } from 'mongodb';
+import { testLogger } from '../../../mocks/logger.mock.js';
+import { createMockUserRepository } from '../../../mocks/user-repository.mock.js';
 
 describe('UserService', () => {
   let userService: UserService;
-  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockUserRepository: jest.Mocked<IUserRepository>;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
-    } as any;
-
-    userService = new UserService(mockUserRepository);
+    mockUserRepository = createMockUserRepository();
+    userService = new UserService(mockUserRepository, testLogger);
   });
 
   describe('getAllUsers', () => {

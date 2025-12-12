@@ -1,3 +1,4 @@
+import { FastifyBaseLogger } from 'fastify';
 import pino from 'pino';
 
-export const testLogger = pino({ level: 'silent' });
+export const testLogger: FastifyBaseLogger = pino({ level: 'silent' });
