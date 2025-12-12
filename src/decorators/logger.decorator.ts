@@ -22,14 +22,3 @@ export function Logger(): PropertyDecorator {
     });
   };
 }
-
-export function setConstructorLogger(instance: any, logger?: FastifyBaseLogger): void {
-  if (logger) {
-    Object.defineProperty(instance, '__constructorLogger', {
-      value: logger,
-      writable: false,
-      enumerable: false,
-      configurable: false
-    });
-  }
-}
