@@ -4,15 +4,13 @@ import { IUserRepository } from './interfaces/user-repository.interface.js';
 import { IUserService } from './interfaces/user-service.interface.js';
 import { User, CreateUserDto, UpdateUserDto } from './user.schema.js';
 import { LogMethod } from '@decorators/log-method.decorator.js';
-import { container } from '@di/container.js';
+import { Logger } from '@decorators/logger.decorator.js';
 
 export class UserService implements IUserService {
-  private readonly logger: FastifyBaseLogger;
+  @Logger()
+  private readonly logger!: FastifyBaseLogger;
 
-  constructor(private readonly userRepository: IUserRepository, logger?: FastifyBaseLogger) {
-    const parentLogger = logger || container.resolve<FastifyBaseLogger>('logger');
-    this.logger = parentLogger.child({ className: 'UserService' });
-  }
+  constructor(private readonly userRepository: IUserRepository) {}
 
   @LogMethod()
   async getAllUsers(): Promise<User[]> {
