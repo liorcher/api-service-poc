@@ -9,8 +9,19 @@ export const loggerConfig: FastifyServerOptions['logger'] = {
         target: 'pino-pretty',
         options: {
           translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname'
+          ignore: 'pid,hostname',
+          messageFormat: '{levelLabel} [{className}] [{method}] [{reqId}] {msg}'
         }
       }
-    : undefined
+    : undefined,
+  serializers: {
+    req: req => ({
+      id: req.id,
+      method: req.method,
+      url: req.url
+    }),
+    res: res => ({
+      statusCode: res.statusCode
+    })
+  }
 };

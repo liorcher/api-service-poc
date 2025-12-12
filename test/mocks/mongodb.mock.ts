@@ -1,6 +1,5 @@
 import { ObjectId } from 'mongodb';
 
-
 export function createMockDb(): any {
   const mockCollections = new Map<string, any>();
 

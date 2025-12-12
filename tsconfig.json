@@ -13,11 +13,12 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -26,7 +27,9 @@
       "@common/*": ["src/types/*"],
       "@di/*": ["src/di/*"],
       "@plugins/*": ["src/plugins/*"],
-      "@routes/*": ["src/routes/*"]
+      "@routes/*": ["src/routes/*"],
+      "@utils/*": ["src/utils/*"],
+      "@decorators/*": ["src/decorators/*"]
     }
   },
   "include": ["src/**/*", "test/**/*"],
