@@ -1,3 +1,10 @@
+import {
+  SENSITIVE_FIELDS,
+  REDACTED,
+  FASTIFY_OBJECT_MARKER,
+  CIRCULAR_REFERENCE_MARKER
+} from '../constants/log-sanitizer.constants.js';
+
 interface SanitizableObject {
   password?: string;
   headers?: Record<string, string>;
@@ -7,10 +14,6 @@ interface SanitizableObject {
   child?: unknown;
   info?: unknown;
 }
-
-const SENSITIVE_FIELDS = ['password', 'apikey', 'api-key', 'token', 'secret', 'authorization'];
-const REDACTED = '[REDACTED]';
-const FASTIFY_OBJECT_MARKER = '[FastifyRequest/Reply]';
 
 export function sanitizeLogArgs(args: unknown[]): unknown[] {
   const seen = new WeakSet();
@@ -40,7 +43,7 @@ function isSensitiveKey(key: string): boolean {
 function sanitizeValue(value: unknown, seen: WeakSet<object>): unknown {
   if (typeof value !== 'object' || value === null) return value;
 
-  if (seen.has(value)) return '[Circular]';
+  if (seen.has(value)) return CIRCULAR_REFERENCE_MARKER;
   seen.add(value);
 
   if (isFastifyObject(value)) return FASTIFY_OBJECT_MARKER;

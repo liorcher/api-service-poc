@@ -1,4 +1,5 @@
 import { getEnvString, getEnvNumber, getEnvBoolean } from '@config/env.js';
+import { aRandomString, aRandomInt } from '../../utils/test-utils.js';
 
 describe('Environment Helper Functions', () => {
   const originalEnv = process.env;
@@ -14,64 +15,109 @@ describe('Environment Helper Functions', () => {
 
   describe('getEnvString', () => {
     it('testGetEnvStringShouldReturnValueWhenVariableSet', () => {
-      process.env.TEST_VAR = 'test-value';
-      expect(getEnvString('TEST_VAR')).toBe('test-value');
+      const varName = aRandomString();
+      const varValue = aRandomString();
+      process.env[varName] = varValue;
+
+      const result = getEnvString(varName);
+
+      expect(result).toBe(varValue);
     });
 
     it('testGetEnvStringShouldReturnDefaultWhenVariableNotSet', () => {
-      expect(getEnvString('NON_EXISTENT', 'default')).toBe('default');
+      const varName = aRandomString();
+      const defaultValue = aRandomString();
+
+      const result = getEnvString(varName, defaultValue);
+
+      expect(result).toBe(defaultValue);
     });
 
     it('testGetEnvStringShouldThrowErrorWhenVariableNotSetAndNoDefault', () => {
-      expect(() => getEnvString('NON_EXISTENT')).toThrow(
-        'Environment variable NON_EXISTENT is required but not set'
+      const varName = aRandomString();
+
+      expect(() => getEnvString(varName)).toThrow(
+        `Environment variable ${varName} is required but not set`
       );
     });
   });
 
   describe('getEnvNumber', () => {
     it('testGetEnvNumberShouldReturnNumberWhenVariableSet', () => {
-      process.env.TEST_NUMBER = '42';
-      expect(getEnvNumber('TEST_NUMBER')).toBe(42);
+      const varName = aRandomString();
+      const varValue = aRandomInt();
+      process.env[varName] = varValue.toString();
+
+      const result = getEnvNumber(varName);
+
+      expect(result).toBe(varValue);
     });
 
     it('testGetEnvNumberShouldReturnDefaultWhenVariableNotSet', () => {
-      expect(getEnvNumber('NON_EXISTENT', 100)).toBe(100);
+      const varName = aRandomString();
+      const defaultValue = aRandomInt();
+
+      const result = getEnvNumber(varName, defaultValue);
+
+      expect(result).toBe(defaultValue);
     });
 
     it('testGetEnvNumberShouldThrowErrorWhenInvalidNumber', () => {
-      process.env.TEST_NUMBER = 'not-a-number';
-      expect(() => getEnvNumber('TEST_NUMBER')).toThrow(
-        'Environment variable TEST_NUMBER must be a valid number'
+      const varName = aRandomString();
+      const invalidValue = aRandomString();
+      process.env[varName] = invalidValue;
+
+      expect(() => getEnvNumber(varName)).toThrow(
+        `Environment variable ${varName} must be a valid number`
       );
     });
 
     it('testGetEnvNumberShouldThrowErrorWhenVariableNotSetAndNoDefault', () => {
-      expect(() => getEnvNumber('NON_EXISTENT')).toThrow(
-        'Environment variable NON_EXISTENT is required but not set'
+      const varName = aRandomString();
+
+      expect(() => getEnvNumber(varName)).toThrow(
+        `Environment variable ${varName} is required but not set`
       );
     });
   });
 
   describe('getEnvBoolean', () => {
     it('testGetEnvBooleanShouldReturnTrueWhenStringIsTrue', () => {
-      process.env.TEST_BOOL = 'true';
-      expect(getEnvBoolean('TEST_BOOL')).toBe(true);
+      const varName = aRandomString();
+      process.env[varName] = 'true';
+
+      const result = getEnvBoolean(varName);
+
+      expect(result).toBe(true);
     });
 
     it('testGetEnvBooleanShouldReturnTrueWhenStringIs1', () => {
-      process.env.TEST_BOOL = '1';
-      expect(getEnvBoolean('TEST_BOOL')).toBe(true);
+      const varName = aRandomString();
+      process.env[varName] = '1';
+
+      const result = getEnvBoolean(varName);
+
+      expect(result).toBe(true);
     });
 
     it('testGetEnvBooleanShouldReturnFalseWhenOtherValues', () => {
-      process.env.TEST_BOOL = 'false';
-      expect(getEnvBoolean('TEST_BOOL')).toBe(false);
+      const varName = aRandomString();
+      process.env[varName] = aRandomString();
+
+      const result = getEnvBoolean(varName);
+
+      expect(result).toBe(false);
     });
 
     it('testGetEnvBooleanShouldReturnDefaultWhenVariableNotSet', () => {
-      expect(getEnvBoolean('NON_EXISTENT', true)).toBe(true);
-      expect(getEnvBoolean('NON_EXISTENT')).toBe(false);
+      const varName1 = aRandomString();
+      const varName2 = aRandomString();
+
+      const resultWithTrue = getEnvBoolean(varName1, true);
+      const resultWithoutDefault = getEnvBoolean(varName2);
+
+      expect(resultWithTrue).toBe(true);
+      expect(resultWithoutDefault).toBe(false);
     });
   });
 });

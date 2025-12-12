@@ -16,9 +16,11 @@ describe('App Integration Tests', () => {
 
   describe('Health Endpoint', () => {
     it('testHealthEndpointShouldReturn200WithStatusWhenCalled', async () => {
+      const endpoint = '/health';
+
       const response = await app.inject({
         method: 'GET',
-        url: '/health'
+        url: endpoint
       });
 
       expect(response.statusCode).toBe(200);
@@ -30,9 +32,11 @@ describe('App Integration Tests', () => {
 
   describe('Unknown Routes', () => {
     it('testUnknownRoutesShouldReturn404WhenInvalidPathRequested', async () => {
+      const invalidPath = '/unknown-route';
+
       const response = await app.inject({
         method: 'GET',
-        url: '/unknown-route'
+        url: invalidPath
       });
 
       expect(response.statusCode).toBe(404);

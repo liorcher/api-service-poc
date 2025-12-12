@@ -1,7 +1,12 @@
 import { UserService } from '@modules/user/user.service.js';
 import { IUserRepository } from '@modules/user/interfaces/user-repository.interface.js';
-import { ObjectId } from 'mongodb';
 import { createMockUserRepository } from '../../../mocks/user-repository.mock.js';
+import {
+  aRandomUser,
+  aRandomUserData,
+  aRandomObjectId,
+  aRandomString
+} from '../../../utils/test-utils.js';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -14,23 +19,7 @@ describe('UserService', () => {
 
   describe('getAllUsers', () => {
     it('testGetAllUsersShouldReturnAllUsersWhenCalled', async () => {
-      const mockUsers = [
-        {
-          _id: new ObjectId(),
-          name: 'User 1',
-          email: 'user1@test.com',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          _id: new ObjectId(),
-          name: 'User 2',
-          email: 'user2@test.com',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ];
-
+      const mockUsers = [aRandomUser(), aRandomUser()];
       mockUserRepository.findAll.mockResolvedValue(mockUsers);
 
       const result = await userService.getAllUsers();
@@ -42,15 +31,9 @@ describe('UserService', () => {
 
   describe('getUserById', () => {
     it('testGetUserByIdShouldReturnUserWhenValidIdProvided', async () => {
-      const userId = new ObjectId();
-      const mockUser = {
-        _id: userId,
-        name: 'Test User',
-        email: 'test@test.com',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
+      const userId = aRandomObjectId();
+      const mockUser = aRandomUser();
+      mockUser._id = userId;
       mockUserRepository.findById.mockResolvedValue(mockUser);
 
       const result = await userService.getUserById(userId.toString());
@@ -60,20 +43,19 @@ describe('UserService', () => {
     });
 
     it('testGetUserByIdShouldThrowErrorWhenInvalidIdFormat', async () => {
-      await expect(userService.getUserById('invalid-id')).rejects.toThrow('Invalid user ID format');
+      const invalidId = aRandomString();
+
+      await expect(userService.getUserById(invalidId)).rejects.toThrow('Invalid user ID format');
     });
   });
 
   describe('createUser', () => {
     it('testCreateUserShouldReturnCreatedUserWhenValidDataProvided', async () => {
-      const userData = { name: 'New User', email: 'new@test.com', age: 25 };
-      const mockCreatedUser = {
-        _id: new ObjectId(),
-        ...userData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
+      const userData = aRandomUserData();
+      const mockCreatedUser = aRandomUser();
+      mockCreatedUser.name = userData.name;
+      mockCreatedUser.email = userData.email;
+      mockCreatedUser.age = userData.age;
       mockUserRepository.create.mockResolvedValue(mockCreatedUser);
 
       const result = await userService.createUser(userData);
@@ -85,16 +67,12 @@ describe('UserService', () => {
 
   describe('updateUser', () => {
     it('testUpdateUserShouldReturnUpdatedUserWhenValidDataProvided', async () => {
-      const userId = new ObjectId();
-      const updateData = { name: 'Updated Name' };
-      const mockUpdatedUser = {
-        _id: userId,
-        name: 'Updated Name',
-        email: 'test@test.com',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
+      const userId = aRandomObjectId();
+      const updatedName = aRandomString();
+      const updateData = { name: updatedName };
+      const mockUpdatedUser = aRandomUser();
+      mockUpdatedUser._id = userId;
+      mockUpdatedUser.name = updatedName;
       mockUserRepository.update.mockResolvedValue(mockUpdatedUser);
 
       const result = await userService.updateUser(userId.toString(), updateData);
@@ -104,7 +82,10 @@ describe('UserService', () => {
     });
 
     it('testUpdateUserShouldThrowErrorWhenInvalidIdFormat', async () => {
-      await expect(userService.updateUser('invalid-id', { name: 'Test' })).rejects.toThrow(
+      const invalidId = aRandomString();
+      const updateData = { name: aRandomString() };
+
+      await expect(userService.updateUser(invalidId, updateData)).rejects.toThrow(
         'Invalid user ID format'
       );
     });
@@ -112,7 +93,7 @@ describe('UserService', () => {
 
   describe('deleteUser', () => {
     it('testDeleteUserShouldReturnTrueWhenUserDeleted', async () => {
-      const userId = new ObjectId();
+      const userId = aRandomObjectId();
       mockUserRepository.delete.mockResolvedValue(true);
 
       const result = await userService.deleteUser(userId.toString());
@@ -122,7 +103,9 @@ describe('UserService', () => {
     });
 
     it('testDeleteUserShouldThrowErrorWhenInvalidIdFormat', async () => {
-      await expect(userService.deleteUser('invalid-id')).rejects.toThrow('Invalid user ID format');
+      const invalidId = aRandomString();
+
+      await expect(userService.deleteUser(invalidId)).rejects.toThrow('Invalid user ID format');
     });
   });
 });
