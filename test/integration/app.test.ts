@@ -15,7 +15,7 @@ describe('App Integration Tests', () => {
   });
 
   describe('Health Endpoint', () => {
-    it('should return 200 with health status', async () => {
+    it('testHealthEndpointShouldReturn200WithStatusWhenCalled', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/health'
@@ -29,7 +29,7 @@ describe('App Integration Tests', () => {
   });
 
   describe('Unknown Routes', () => {
-    it('should return 404 for unknown routes', async () => {
+    it('testUnknownRoutesShouldReturn404WhenInvalidPathRequested', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/unknown-route'

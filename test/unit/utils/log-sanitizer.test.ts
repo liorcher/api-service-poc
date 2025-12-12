@@ -3,18 +3,18 @@ import { testLogger } from '../../mocks/logger.mock.js';
 
 describe('sanitizeLogArgs', () => {
   describe('Basic Value Handling', () => {
-    it('should pass through primitive values unchanged', () => {
+    it('testSanitizeLogArgsShouldReturnUnchangedWhenPassedPrimitiveValues', () => {
       const args = ['string', 123, true, null, undefined];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual(['string', 123, true, null, undefined]);
     });
 
-    it('should pass through empty array unchanged', () => {
+    it('testSanitizeLogArgsShouldReturnEmptyArrayWhenPassedEmptyArray', () => {
       const result = sanitizeLogArgs([]);
       expect(result).toEqual([]);
     });
 
-    it('should pass through simple objects unchanged', () => {
+    it('testSanitizeLogArgsShouldReturnUnchangedWhenPassedSimpleObjects', () => {
       const args = [{ name: 'John', age: 30 }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ name: 'John', age: 30 }]);
@@ -22,13 +22,13 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Logger Object Filtering', () => {
-    it('should filter out logger objects', () => {
+    it('testSanitizeLogArgsShouldFilterOutLoggerObjectsWhenPresent', () => {
       const args = ['test', testLogger, { data: 'value' }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual(['test', { data: 'value' }]);
     });
 
-    it('should keep objects that only have child method', () => {
+    it('testSanitizeLogArgsShouldKeepObjectWhenOnlyChildMethodPresent', () => {
       const notLogger = {
         child: () => ({}),
         someOtherMethod: () => {}
@@ -39,7 +39,7 @@ describe('sanitizeLogArgs', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('should keep objects that only have info method', () => {
+    it('testSanitizeLogArgsShouldKeepObjectWhenOnlyInfoMethodPresent', () => {
       const notLogger = {
         info: () => {},
         someOtherMethod: () => {}
@@ -52,7 +52,7 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Fastify Object Detection', () => {
-    it('should detect and replace Fastify Request object', () => {
+    it('testSanitizeLogArgsShouldReplaceWithMarkerWhenFastifyRequestDetected', () => {
       const fastifyRequest = {
         raw: {},
         params: { id: '123' },
@@ -65,7 +65,7 @@ describe('sanitizeLogArgs', () => {
       expect(result).toEqual(['[FastifyRequest/Reply]']);
     });
 
-    it('should detect and replace Fastify Reply object', () => {
+    it('testSanitizeLogArgsShouldReplaceWithMarkerWhenFastifyReplyDetected', () => {
       const fastifyReply = {
         log: {},
         request: {},
@@ -77,7 +77,7 @@ describe('sanitizeLogArgs', () => {
       expect(result).toEqual(['[FastifyRequest/Reply]']);
     });
 
-    it('should detect objects with request property', () => {
+    it('testSanitizeLogArgsShouldReplaceWithMarkerWhenRequestPropertyPresent', () => {
       const obj = {
         request: {},
         data: 'value'
@@ -90,31 +90,31 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Sensitive Field Redaction', () => {
-    it('should redact password field', () => {
+    it('testSanitizeLogArgsShouldRedactPasswordFieldWhenPresent', () => {
       const args = [{ username: 'john', password: 'secret123' }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ username: 'john', password: '[REDACTED]' }]);
     });
 
-    it('should redact apiKey field', () => {
+    it('testSanitizeLogArgsShouldRedactApiKeyFieldWhenPresent', () => {
       const args = [{ service: 'stripe', apiKey: 'sk_test_123' }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ service: 'stripe', apiKey: '[REDACTED]' }]);
     });
 
-    it('should redact token field', () => {
+    it('testSanitizeLogArgsShouldRedactTokenFieldWhenPresent', () => {
       const args = [{ user: 'john', token: 'jwt_token_123' }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ user: 'john', token: '[REDACTED]' }]);
     });
 
-    it('should redact secret field', () => {
+    it('testSanitizeLogArgsShouldRedactSecretFieldWhenPresent', () => {
       const args = [{ app: 'myapp', secret: 'my_secret_key' }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ app: 'myapp', secret: '[REDACTED]' }]);
     });
 
-    it('should redact fields with case-insensitive matching', () => {
+    it('testSanitizeLogArgsShouldRedactFieldsWithCaseInsensitiveMatching', () => {
       const args = [
         {
           PASSWORD: 'secret',
@@ -134,7 +134,7 @@ describe('sanitizeLogArgs', () => {
       ]);
     });
 
-    it('should redact fields containing sensitive keywords', () => {
+    it('testSanitizeLogArgsShouldRedactFieldsContainingSensitiveKeywords', () => {
       const args = [
         {
           userPassword: 'secret',
@@ -154,7 +154,7 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Header Sanitization', () => {
-    it('should sanitize sensitive headers', () => {
+    it('testSanitizeLogArgsShouldSanitizeSensitiveHeadersWhenPresent', () => {
       const args = [
         {
           method: 'POST',
@@ -178,7 +178,7 @@ describe('sanitizeLogArgs', () => {
       ]);
     });
 
-    it('should keep non-sensitive headers unchanged', () => {
+    it('testSanitizeLogArgsShouldKeepNonSensitiveHeadersUnchanged', () => {
       const args = [
         {
           headers: {
@@ -200,13 +200,13 @@ describe('sanitizeLogArgs', () => {
       ]);
     });
 
-    it('should handle empty headers object', () => {
+    it('testSanitizeLogArgsShouldHandleEmptyHeadersObject', () => {
       const args = [{ method: 'GET', headers: {} }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ method: 'GET', headers: {} }]);
     });
 
-    it('should sanitize headers with case-insensitive matching', () => {
+    it('testSanitizeLogArgsShouldSanitizeHeadersWithCaseInsensitiveMatching', () => {
       const args = [
         {
           headers: {
@@ -230,7 +230,7 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Complex Object Handling', () => {
-    it('should handle nested objects with sensitive data', () => {
+    it('testSanitizeLogArgsShouldSanitizeNestedObjectsWithSensitiveData', () => {
       const args = [
         {
           user: {
@@ -256,7 +256,7 @@ describe('sanitizeLogArgs', () => {
       ]);
     });
 
-    it('should handle multiple arguments with mixed types', () => {
+    it('testSanitizeLogArgsShouldHandleMultipleArgumentsWithMixedTypes', () => {
       const fastifyRequest = {
         raw: {},
         params: { id: '123' }
@@ -278,7 +278,7 @@ describe('sanitizeLogArgs', () => {
       ]);
     });
 
-    it('should handle arrays within objects', () => {
+    it('testSanitizeLogArgsShouldKeepArraysAsIsWithinObjects', () => {
       const args = [
         {
           users: [
@@ -301,37 +301,37 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle null values', () => {
+    it('testSanitizeLogArgsShouldReturnNullWhenPassedNull', () => {
       const args = [null];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([null]);
     });
 
-    it('should handle undefined values', () => {
+    it('testSanitizeLogArgsShouldReturnUndefinedWhenPassedUndefined', () => {
       const args = [undefined];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([undefined]);
     });
 
-    it('should redact sensitive fields even when null', () => {
+    it('testSanitizeLogArgsShouldRedactSensitiveFieldsEvenWhenNull', () => {
       const args = [{ name: 'John', password: null }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ name: 'John', password: '[REDACTED]' }]);
     });
 
-    it('should redact sensitive fields even when undefined', () => {
+    it('testSanitizeLogArgsShouldRedactSensitiveFieldsEvenWhenUndefined', () => {
       const args = [{ name: 'John', password: undefined }];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{ name: 'John', password: '[REDACTED]' }]);
     });
 
-    it('should handle empty objects', () => {
+    it('testSanitizeLogArgsShouldReturnEmptyObjectWhenPassedEmptyObject', () => {
       const args = [{}];
       const result = sanitizeLogArgs(args);
       expect(result).toEqual([{}]);
     });
 
-    it('should handle objects with symbol keys', () => {
+    it('testSanitizeLogArgsShouldIgnoreSymbolKeysInObjects', () => {
       const sym = Symbol('test');
       const args = [{ [sym]: 'value', name: 'John' }];
       const result = sanitizeLogArgs(args);
@@ -339,7 +339,7 @@ describe('sanitizeLogArgs', () => {
       expect(result).toEqual([{ name: 'John' }]);
     });
 
-    it('should handle circular references gracefully', () => {
+    it('testSanitizeLogArgsShouldReplaceCircularReferencesWithMarker', () => {
       const obj: Record<string, unknown> = { name: 'John' };
       obj.self = obj; // Create circular reference
 
@@ -349,7 +349,7 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Real-World Scenarios', () => {
-    it('should sanitize login request', () => {
+    it('testSanitizeLogArgsShouldSanitizeLoginRequestData', () => {
       const args = [
         {
           body: {
@@ -369,7 +369,7 @@ describe('sanitizeLogArgs', () => {
       ]);
     });
 
-    it('should sanitize API request with headers', () => {
+    it('testSanitizeLogArgsShouldSanitizeApiRequestWithSensitiveHeaders', () => {
       const args = [
         {
           url: '/api/users',
@@ -401,7 +401,7 @@ describe('sanitizeLogArgs', () => {
       ]);
     });
 
-    it('should sanitize payment request', () => {
+    it('testSanitizeLogArgsShouldSanitizePaymentRequestWithCredentials', () => {
       const args = [
         {
           amount: 1000,

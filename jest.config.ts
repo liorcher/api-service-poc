@@ -20,6 +20,7 @@ const config: Config = {
     '^@routes/(.*)\\.(js|ts)$': '<rootDir>/src/routes/$1',
     '^@utils/(.*)\\.(js|ts)$': '<rootDir>/src/utils/$1',
     '^@decorators/(.*)\\.(js|ts)$': '<rootDir>/src/decorators/$1',
+    '^@context/(.*)\\.(js|ts)$': '<rootDir>/src/context/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1'
   }
 };

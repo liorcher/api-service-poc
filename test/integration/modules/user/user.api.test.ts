@@ -15,7 +15,7 @@ describe('User API Integration Tests', () => {
   });
 
   describe('GET /api/users', () => {
-    it('should return users array', async () => {
+    it('testGetUsersEndpointShouldReturnUsersArrayWhenValidApiKey', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/users',
@@ -32,7 +32,7 @@ describe('User API Integration Tests', () => {
   });
 
   describe('POST /api/users', () => {
-    it('should create a new user', async () => {
+    it('testCreateUserEndpointShouldReturn201WhenValidDataProvided', async () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/users',
@@ -54,7 +54,7 @@ describe('User API Integration Tests', () => {
       expect(payload.data.email).toBe('test@example.com');
     });
 
-    it('should fail without required fields', async () => {
+    it('testCreateUserEndpointShouldReturn400WhenRequiredFieldsMissing', async () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/users',
@@ -69,7 +69,7 @@ describe('User API Integration Tests', () => {
       expect(response.statusCode).toBe(400);
     });
 
-    it('should fail with invalid email', async () => {
+    it('testCreateUserEndpointShouldReturn400WhenInvalidEmailProvided', async () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/users',
@@ -87,7 +87,7 @@ describe('User API Integration Tests', () => {
   });
 
   describe('GET /api/users/:id', () => {
-    it('should return 400 for invalid ID', async () => {
+    it('testGetUserByIdEndpointShouldReturn400WhenInvalidIdProvided', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/users/invalid-id',
@@ -104,7 +104,7 @@ describe('User API Integration Tests', () => {
   });
 
   describe('API Key Authentication', () => {
-    it('should return 401 when API key is missing', async () => {
+    it('testApiKeyAuthShouldReturn401WhenApiKeyMissing', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/users'
@@ -116,7 +116,7 @@ describe('User API Integration Tests', () => {
       expect(payload.error).toBe('API key required');
     });
 
-    it('should return 403 when API key is invalid', async () => {
+    it('testApiKeyAuthShouldReturn403WhenApiKeyInvalid', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/users',
