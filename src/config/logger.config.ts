@@ -12,7 +12,8 @@ export const loggerConfig: FastifyServerOptions['logger'] = {
           ignore: 'pid,hostname',
           singleLine: false,
           colorize: true,
-          messageFormat: '{if className}[{className}]{end}{if method}[{method}]{end}{if reqId}[{reqId}]{end} {msg}'
+          messageFormat:
+            '{if className}[{className}]{end}{if method}[{method}]{end}{if reqId}[{reqId}]{end} {msg}'
         }
       }
     : undefined,
