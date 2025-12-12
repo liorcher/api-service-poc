@@ -82,22 +82,16 @@ describe('Environment Helper Functions', () => {
   });
 
   describe('getEnvBoolean', () => {
-    it('testGetEnvBooleanShouldReturnTrueWhenStringIsTrue', () => {
+    it.each([
+      { input: 'true', expected: true, description: 'StringIsTrue' },
+      { input: '1', expected: true, description: 'StringIs1' }
+    ])('testGetEnvBooleanShouldReturnTrueWhen$description', ({ input, expected }) => {
       const varName = aRandomString();
-      process.env[varName] = 'true';
+      process.env[varName] = input;
 
       const result = getEnvBoolean(varName);
 
-      expect(result).toBe(true);
-    });
-
-    it('testGetEnvBooleanShouldReturnTrueWhenStringIs1', () => {
-      const varName = aRandomString();
-      process.env[varName] = '1';
-
-      const result = getEnvBoolean(varName);
-
-      expect(result).toBe(true);
+      expect(result).toBe(expected);
     });
 
     it('testGetEnvBooleanShouldReturnFalseWhenOtherValues', () => {
@@ -109,15 +103,18 @@ describe('Environment Helper Functions', () => {
       expect(result).toBe(false);
     });
 
-    it('testGetEnvBooleanShouldReturnDefaultWhenVariableNotSet', () => {
-      const varName1 = aRandomString();
-      const varName2 = aRandomString();
+    it.each([
+      { defaultValue: true, expected: true, description: 'WithTrueDefault' },
+      { defaultValue: undefined, expected: false, description: 'WithoutDefault' }
+    ])(
+      'testGetEnvBooleanShouldReturnDefaultWhenVariableNotSet_$description',
+      ({ defaultValue, expected }) => {
+        const varName = aRandomString();
 
-      const resultWithTrue = getEnvBoolean(varName1, true);
-      const resultWithoutDefault = getEnvBoolean(varName2);
+        const result = getEnvBoolean(varName, defaultValue);
 
-      expect(resultWithTrue).toBe(true);
-      expect(resultWithoutDefault).toBe(false);
-    });
+        expect(result).toBe(expected);
+      }
+    );
   });
 });

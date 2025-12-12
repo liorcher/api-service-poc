@@ -22,9 +22,7 @@ describe('User API Integration Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: endpoint,
-        headers: {
-          'x-api-key': TEST_API_KEY
-        }
+        headers: { 'x-api-key': TEST_API_KEY }
       });
 
       expect(response.statusCode).toBe(200);
@@ -48,11 +46,7 @@ describe('User API Integration Tests', () => {
           'content-type': 'application/json',
           'x-api-key': TEST_API_KEY
         },
-        payload: {
-          name: userName,
-          email: userEmail,
-          age: userAge
-        }
+        payload: { name: userName, email: userEmail, age: userAge }
       });
 
       expect(response.statusCode).toBe(201);
@@ -62,39 +56,17 @@ describe('User API Integration Tests', () => {
       expect(payload.data.email).toBe(userEmail);
     });
 
-    it('testCreateUserEndpointShouldReturn400WhenRequiredFieldsMissing', async () => {
+    it.each([
+      ['RequiredFieldsMissing', { name: aRandomString() }],
+      ['InvalidEmailProvided', { name: aRandomString(), email: aRandomString() }]
+    ])('testCreateUserEndpointShouldReturn400When%s', async (_description, payload) => {
       const endpoint = '/api/users';
-      const userName = aRandomString();
 
       const response = await app.inject({
         method: 'POST',
         url: endpoint,
-        headers: {
-          'x-api-key': TEST_API_KEY
-        },
-        payload: {
-          name: userName
-        }
-      });
-
-      expect(response.statusCode).toBe(400);
-    });
-
-    it('testCreateUserEndpointShouldReturn400WhenInvalidEmailProvided', async () => {
-      const endpoint = '/api/users';
-      const userName = aRandomString();
-      const invalidEmail = aRandomString();
-
-      const response = await app.inject({
-        method: 'POST',
-        url: endpoint,
-        headers: {
-          'x-api-key': TEST_API_KEY
-        },
-        payload: {
-          name: userName,
-          email: invalidEmail
-        }
+        headers: { 'x-api-key': TEST_API_KEY },
+        payload
       });
 
       expect(response.statusCode).toBe(400);
@@ -109,9 +81,7 @@ describe('User API Integration Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: endpoint,
-        headers: {
-          'x-api-key': TEST_API_KEY
-        }
+        headers: { 'x-api-key': TEST_API_KEY }
       });
 
       expect(response.statusCode).toBe(400);
@@ -122,36 +92,26 @@ describe('User API Integration Tests', () => {
   });
 
   describe('API Key Authentication', () => {
-    it('testApiKeyAuthShouldReturn401WhenApiKeyMissing', async () => {
-      const endpoint = '/api/users';
+    it.each([
+      [401, undefined, 'Missing', 'API key required'],
+      [403, aRandomString(), 'Invalid', 'Invalid API key']
+    ])(
+      'testApiKeyAuthShouldReturn%dWhenApiKey%s',
+      async (expectedStatus, apiKey, _description, expectedError) => {
+        const endpoint = '/api/users';
+        const headers = apiKey ? { 'x-api-key': apiKey } : {};
 
-      const response = await app.inject({
-        method: 'GET',
-        url: endpoint
-      });
+        const response = await app.inject({
+          method: 'GET',
+          url: endpoint,
+          headers
+        });
 
-      expect(response.statusCode).toBe(401);
-      const payload = JSON.parse(response.payload);
-      expect(payload.success).toBe(false);
-      expect(payload.error).toBe('API key required');
-    });
-
-    it('testApiKeyAuthShouldReturn403WhenApiKeyInvalid', async () => {
-      const endpoint = '/api/users';
-      const invalidApiKey = aRandomString();
-
-      const response = await app.inject({
-        method: 'GET',
-        url: endpoint,
-        headers: {
-          'x-api-key': invalidApiKey
-        }
-      });
-
-      expect(response.statusCode).toBe(403);
-      const payload = JSON.parse(response.payload);
-      expect(payload.success).toBe(false);
-      expect(payload.error).toBe('Invalid API key');
-    });
+        expect(response.statusCode).toBe(expectedStatus);
+        const payload = JSON.parse(response.payload);
+        expect(payload.success).toBe(false);
+        expect(payload.error).toBe(expectedError);
+      }
+    );
   });
 });

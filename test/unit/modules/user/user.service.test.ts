@@ -66,7 +66,7 @@ describe('UserService', () => {
   });
 
   describe('updateUser', () => {
-    it('testUpdateUserShouldReturnUpdatedUserWhenValidDataProvided', async () => {
+    it('testUpdateUserShouldReturnUpdatedUserWhenValidIdProvided', async () => {
       const userId = aRandomObjectId();
       const updatedName = aRandomString();
       const updateData = { name: updatedName };

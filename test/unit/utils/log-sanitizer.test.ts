@@ -25,9 +25,7 @@ describe('sanitizeLogArgs', () => {
     });
 
     it('testSanitizeLogArgsShouldReturnEmptyArrayWhenPassedEmptyArray', () => {
-      const args: unknown[] = [];
-
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([]);
 
       expect(result).toEqual([]);
     });
@@ -35,9 +33,8 @@ describe('sanitizeLogArgs', () => {
     it('testSanitizeLogArgsShouldReturnUnchangedWhenPassedSimpleObjects', () => {
       const name = aRandomString();
       const age = aRandomInt(18, 80);
-      const args = [{ name, age }];
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([{ name, age }]);
 
       expect(result).toEqual([{ name, age }]);
     });
@@ -47,161 +44,78 @@ describe('sanitizeLogArgs', () => {
     it('testSanitizeLogArgsShouldFilterOutLoggerObjectsWhenPresent', () => {
       const stringValue = aRandomString();
       const data = { value: aRandomString() };
-      const args = [stringValue, testLogger, data];
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([stringValue, testLogger, data]);
 
       expect(result).toEqual([stringValue, data]);
     });
 
-    it('testSanitizeLogArgsShouldKeepObjectWhenOnlyChildMethodPresent', () => {
-      const notLogger = {
-        child: () => ({}),
-        someOtherMethod: () => {}
-      };
-      const args = [notLogger];
+    it.each(['child', 'info'])(
+      'testSanitizeLogArgsShouldKeepObjectWhenOnly_%s_MethodPresent',
+      methodName => {
+        const notLogger = {
+          [methodName]: () => {},
+          someOtherMethod: () => {}
+        };
 
-      const result = sanitizeLogArgs(args);
+        const result = sanitizeLogArgs([notLogger]);
 
-      expect(result).toHaveLength(1);
-    });
-
-    it('testSanitizeLogArgsShouldKeepObjectWhenOnlyInfoMethodPresent', () => {
-      const notLogger = {
-        info: () => {},
-        someOtherMethod: () => {}
-      };
-      const args = [notLogger];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toHaveLength(1);
-    });
+        expect(result).toHaveLength(1);
+      }
+    );
   });
 
   describe('Fastify Object Detection', () => {
-    it('testSanitizeLogArgsShouldReplaceWithMarkerWhenFastifyRequestDetected', () => {
-      const fastifyRequest = {
-        raw: {},
-        params: { id: aRandomString() },
-        query: {},
-        body: {}
-      };
-      const args = [fastifyRequest];
+    it.each([
+      ['raw', 'FastifyRequest'],
+      ['log', 'FastifyReply'],
+      ['request', 'RequestProperty']
+    ])(
+      'testSanitizeLogArgsShouldReplaceWithMarkerWhen%sPropertyDetected',
+      (property, _description) => {
+        const obj = { [property]: {}, data: aRandomString() };
 
-      const result = sanitizeLogArgs(args);
+        const result = sanitizeLogArgs([obj]);
 
-      expect(result).toEqual([FASTIFY_MARKER]);
-    });
-
-    it('testSanitizeLogArgsShouldReplaceWithMarkerWhenFastifyReplyDetected', () => {
-      const fastifyReply = {
-        log: {},
-        request: {},
-        send: () => {}
-      };
-      const args = [fastifyReply];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([FASTIFY_MARKER]);
-    });
-
-    it('testSanitizeLogArgsShouldReplaceWithMarkerWhenRequestPropertyPresent', () => {
-      const obj = {
-        request: {},
-        data: aRandomString()
-      };
-      const args = [obj];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([FASTIFY_MARKER]);
-    });
+        expect(result).toEqual([FASTIFY_MARKER]);
+      }
+    );
   });
 
   describe('Sensitive Field Redaction', () => {
-    it('testSanitizeLogArgsShouldRedactPasswordFieldWhenPresent', () => {
-      const username = aRandomString();
-      const password = aRandomPassword();
-      const args = [{ username, password }];
+    it.each([
+      ['password', () => aRandomPassword()],
+      ['apiKey', () => aRandomApiKey()],
+      ['token', () => aRandomToken()],
+      ['secret', () => aRandomString(32)]
+    ])('testSanitizeLogArgsShouldRedact_%s_FieldWhenPresent', (field, generator) => {
+      const otherField = aRandomString();
+      const sensitiveValue = generator();
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([{ other: otherField, [field]: sensitiveValue }]);
 
-      expect(result).toEqual([{ username, password: REDACTED_MARKER }]);
+      expect(result).toEqual([{ other: otherField, [field]: REDACTED_MARKER }]);
     });
 
-    it('testSanitizeLogArgsShouldRedactApiKeyFieldWhenPresent', () => {
-      const service = aRandomString();
-      const apiKey = aRandomApiKey();
-      const args = [{ service, apiKey }];
+    it.each([
+      ['PASSWORD', () => aRandomPassword()],
+      ['ApiKey', () => aRandomApiKey()],
+      ['Token', () => aRandomToken()],
+      ['SECRET', () => aRandomString(32)]
+    ])('testSanitizeLogArgsShouldRedactFieldWithCaseInsensitiveMatching_%s', (field, value) => {
+      const result = sanitizeLogArgs([{ [field]: value() }]);
 
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([{ service, apiKey: REDACTED_MARKER }]);
+      expect(result).toEqual([{ [field]: REDACTED_MARKER }]);
     });
 
-    it('testSanitizeLogArgsShouldRedactTokenFieldWhenPresent', () => {
-      const user = aRandomString();
-      const token = aRandomToken();
-      const args = [{ user, token }];
+    it.each([
+      ['userPassword', () => aRandomPassword()],
+      ['accessToken', () => aRandomToken()],
+      ['apiKeyValue', () => aRandomApiKey()]
+    ])('testSanitizeLogArgsShouldRedactFieldContainingSensitiveKeyword_%s', (field, generator) => {
+      const result = sanitizeLogArgs([{ [field]: generator() }]);
 
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([{ user, token: REDACTED_MARKER }]);
-    });
-
-    it('testSanitizeLogArgsShouldRedactSecretFieldWhenPresent', () => {
-      const app = aRandomString();
-      const secret = aRandomString(32);
-      const args = [{ app, secret }];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([{ app, secret: REDACTED_MARKER }]);
-    });
-
-    it('testSanitizeLogArgsShouldRedactFieldsWithCaseInsensitiveMatching', () => {
-      const password = aRandomPassword();
-      const apiKey = aRandomApiKey();
-      const token = aRandomToken();
-      const secret = aRandomString(32);
-      const args = [
-        {
-          PASSWORD: password,
-          ApiKey: apiKey,
-          Token: token,
-          SECRET: secret
-        }
-      ];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([
-        {
-          PASSWORD: REDACTED_MARKER,
-          ApiKey: REDACTED_MARKER,
-          Token: REDACTED_MARKER,
-          SECRET: REDACTED_MARKER
-        }
-      ]);
-    });
-
-    it('testSanitizeLogArgsShouldRedactFieldsContainingSensitiveKeywords', () => {
-      const userPassword = aRandomPassword();
-      const accessToken = aRandomToken();
-      const apiKeyValue = aRandomApiKey();
-      const args = [{ userPassword, accessToken, apiKeyValue }];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([
-        {
-          userPassword: REDACTED_MARKER,
-          accessToken: REDACTED_MARKER,
-          apiKeyValue: REDACTED_MARKER
-        }
-      ]);
+      expect(result).toEqual([{ [field]: REDACTED_MARKER }]);
     });
   });
 
@@ -210,7 +124,8 @@ describe('sanitizeLogArgs', () => {
       const method = aRandomString();
       const apiKey = aRandomApiKey();
       const authToken = aRandomToken();
-      const args = [
+
+      const result = sanitizeLogArgs([
         {
           method,
           headers: {
@@ -219,9 +134,7 @@ describe('sanitizeLogArgs', () => {
             authorization: `Bearer ${authToken}`
           }
         }
-      ];
-
-      const result = sanitizeLogArgs(args);
+      ]);
 
       expect(result).toEqual([
         {
@@ -236,26 +149,23 @@ describe('sanitizeLogArgs', () => {
     });
 
     it('testSanitizeLogArgsShouldKeepNonSensitiveHeadersUnchanged', () => {
-      const contentType = 'application/json';
-      const accept = 'application/json';
       const userAgent = aRandomString();
-      const args = [
+
+      const result = sanitizeLogArgs([
         {
           headers: {
-            'content-type': contentType,
-            accept,
+            'content-type': 'application/json',
+            accept: 'application/json',
             'user-agent': userAgent
           }
         }
-      ];
-
-      const result = sanitizeLogArgs(args);
+      ]);
 
       expect(result).toEqual([
         {
           headers: {
-            'content-type': contentType,
-            accept,
+            'content-type': 'application/json',
+            accept: 'application/json',
             'user-agent': userAgent
           }
         }
@@ -264,38 +174,10 @@ describe('sanitizeLogArgs', () => {
 
     it('testSanitizeLogArgsShouldHandleEmptyHeadersObject', () => {
       const method = aRandomString();
-      const args = [{ method, headers: {} }];
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([{ method, headers: {} }]);
 
       expect(result).toEqual([{ method, headers: {} }]);
-    });
-
-    it('testSanitizeLogArgsShouldSanitizeHeadersWithCaseInsensitiveMatching', () => {
-      const apiKey = aRandomApiKey();
-      const authToken = aRandomToken();
-      const password = aRandomPassword();
-      const args = [
-        {
-          headers: {
-            'X-API-KEY': apiKey,
-            Authorization: authToken,
-            PASSWORD: password
-          }
-        }
-      ];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([
-        {
-          headers: {
-            'X-API-KEY': REDACTED_MARKER,
-            Authorization: REDACTED_MARKER,
-            PASSWORD: REDACTED_MARKER
-          }
-        }
-      ]);
     });
   });
 
@@ -304,19 +186,15 @@ describe('sanitizeLogArgs', () => {
       const userName = aRandomString();
       const password = aRandomPassword();
       const apiKey = aRandomApiKey();
-      const args = [
+
+      const result = sanitizeLogArgs([
         {
           user: {
             name: userName,
-            credentials: {
-              password,
-              apiKey
-            }
+            credentials: { password, apiKey }
           }
         }
-      ];
-
-      const result = sanitizeLogArgs(args);
+      ]);
 
       expect(result).toEqual([
         {
@@ -334,16 +212,17 @@ describe('sanitizeLogArgs', () => {
     it('testSanitizeLogArgsShouldHandleMultipleArgumentsWithMixedTypes', () => {
       const stringValue = aRandomString();
       const intValue = aRandomInt();
-      const fastifyRequest = {
-        raw: {},
-        params: { id: aRandomString() }
-      };
+      const fastifyRequest = { raw: {}, params: { id: aRandomString() } };
       const userName = aRandomString();
       const password = aRandomPassword();
-      const userData = { name: userName, password };
-      const args = [stringValue, intValue, testLogger, fastifyRequest, userData];
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([
+        stringValue,
+        intValue,
+        testLogger,
+        fastifyRequest,
+        { name: userName, password }
+      ]);
 
       expect(result).toEqual([
         stringValue,
@@ -354,71 +233,38 @@ describe('sanitizeLogArgs', () => {
     });
 
     it('testSanitizeLogArgsShouldKeepArraysAsIsWithinObjects', () => {
-      const user1Name = aRandomString();
-      const user1Password = aRandomPassword();
-      const user2Name = aRandomString();
-      const user2Password = aRandomPassword();
-      const args = [
-        {
-          users: [
-            { name: user1Name, password: user1Password },
-            { name: user2Name, password: user2Password }
-          ]
-        }
-      ];
+      const user1 = { name: aRandomString(), password: aRandomPassword() };
+      const user2 = { name: aRandomString(), password: aRandomPassword() };
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([{ users: [user1, user2] }]);
 
-      expect(result).toEqual([
-        {
-          users: [
-            { name: user1Name, password: user1Password },
-            { name: user2Name, password: user2Password }
-          ]
-        }
-      ]);
+      expect(result).toEqual([{ users: [user1, user2] }]);
     });
   });
 
   describe('Edge Cases', () => {
-    it('testSanitizeLogArgsShouldReturnNullWhenPassedNull', () => {
-      const args = [null];
+    it.each([
+      [null, 'Null'],
+      [undefined, 'Undefined']
+    ])('testSanitizeLogArgsShouldReturn%sWhenPassed%s', (value, _description) => {
+      const result = sanitizeLogArgs([value]);
 
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([null]);
+      expect(result).toEqual([value]);
     });
 
-    it('testSanitizeLogArgsShouldReturnUndefinedWhenPassedUndefined', () => {
-      const args = [undefined];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([undefined]);
-    });
-
-    it('testSanitizeLogArgsShouldRedactSensitiveFieldsEvenWhenNull', () => {
+    it.each([
+      [null, 'Null'],
+      [undefined, 'Undefined']
+    ])('testSanitizeLogArgsShouldRedactSensitiveFieldsEvenWhen%s', (value, _description) => {
       const name = aRandomString();
-      const args = [{ name, password: null }];
 
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([{ name, password: REDACTED_MARKER }]);
-    });
-
-    it('testSanitizeLogArgsShouldRedactSensitiveFieldsEvenWhenUndefined', () => {
-      const name = aRandomString();
-      const args = [{ name, password: undefined }];
-
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([{ name, password: value }]);
 
       expect(result).toEqual([{ name, password: REDACTED_MARKER }]);
     });
 
     it('testSanitizeLogArgsShouldReturnEmptyObjectWhenPassedEmptyObject', () => {
-      const args = [{}];
-
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([{}]);
 
       expect(result).toEqual([{}]);
     });
@@ -427,9 +273,8 @@ describe('sanitizeLogArgs', () => {
       const sym = Symbol('test');
       const name = aRandomString();
       const symbolValue = aRandomString();
-      const args = [{ [sym]: symbolValue, name }];
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs([{ [sym]: symbolValue, name }]);
 
       expect(result).toEqual([{ name }]);
     });
@@ -446,85 +291,68 @@ describe('sanitizeLogArgs', () => {
   });
 
   describe('Real-World Scenarios', () => {
-    it('testSanitizeLogArgsShouldSanitizeLoginRequestData', () => {
-      const email = aRandomEmail();
-      const password = aRandomPassword();
-      const args = [{ body: { email, password } }];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([{ body: { email, password: REDACTED_MARKER } }]);
-    });
-
-    it('testSanitizeLogArgsShouldSanitizeApiRequestWithSensitiveHeaders', () => {
-      const url = '/api/users';
-      const method = 'POST';
-      const apiKey = aRandomApiKey();
-      const userName = aRandomString();
-      const userEmail = aRandomEmail();
-      const args = [
-        {
-          url,
-          method,
-          headers: {
-            'content-type': 'application/json',
-            'x-api-key': apiKey
-          },
-          body: {
-            name: userName,
-            email: userEmail
-          }
+    it.each([
+      [
+        'LoginRequestData',
+        () => {
+          const email = aRandomEmail();
+          const password = aRandomPassword();
+          return {
+            input: [{ body: { email, password } }],
+            expected: [{ body: { email, password: REDACTED_MARKER } }]
+          };
         }
-      ];
-
-      const result = sanitizeLogArgs(args);
-
-      expect(result).toEqual([
-        {
-          url,
-          method,
-          headers: {
-            'content-type': 'application/json',
-            'x-api-key': REDACTED_MARKER
-          },
-          body: {
-            name: userName,
-            email: userEmail
-          }
+      ],
+      [
+        'ApiRequestWithSensitiveHeaders',
+        () => {
+          const apiKey = aRandomApiKey();
+          const userName = aRandomString();
+          const userEmail = aRandomEmail();
+          return {
+            input: [
+              {
+                url: '/api/users',
+                method: 'POST',
+                headers: { 'content-type': 'application/json', 'x-api-key': apiKey },
+                body: { name: userName, email: userEmail }
+              }
+            ],
+            expected: [
+              {
+                url: '/api/users',
+                method: 'POST',
+                headers: { 'content-type': 'application/json', 'x-api-key': REDACTED_MARKER },
+                body: { name: userName, email: userEmail }
+              }
+            ]
+          };
         }
-      ]);
-    });
-
-    it('testSanitizeLogArgsShouldSanitizePaymentRequestWithCredentials', () => {
-      const amount = aRandomInt(100, 10000);
-      const currency = 'USD';
-      const token = aRandomToken();
-      const apiKey = aRandomApiKey();
-      const args = [
-        {
-          amount,
-          currency,
-          paymentMethod: {
-            type: 'card',
-            token,
-            apiKey
-          }
+      ],
+      [
+        'PaymentRequestWithCredentials',
+        () => {
+          const amount = aRandomInt(100, 10000);
+          const token = aRandomToken();
+          const apiKey = aRandomApiKey();
+          return {
+            input: [{ amount, currency: 'USD', paymentMethod: { type: 'card', token, apiKey } }],
+            expected: [
+              {
+                amount,
+                currency: 'USD',
+                paymentMethod: { type: 'card', token: REDACTED_MARKER, apiKey: REDACTED_MARKER }
+              }
+            ]
+          };
         }
-      ];
+      ]
+    ])('testSanitizeLogArgsShouldSanitize%s', (_scenario, setupTest) => {
+      const { input, expected } = setupTest();
 
-      const result = sanitizeLogArgs(args);
+      const result = sanitizeLogArgs(input);
 
-      expect(result).toEqual([
-        {
-          amount,
-          currency,
-          paymentMethod: {
-            type: 'card',
-            token: REDACTED_MARKER,
-            apiKey: REDACTED_MARKER
-          }
-        }
-      ]);
+      expect(result).toEqual(expected);
     });
   });
 });
