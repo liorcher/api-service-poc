@@ -5,11 +5,10 @@ import { setupContainer } from '@di/setup.js';
 import { registerRoutes } from '@routes/index.js';
 import { errorHandler } from '@/middleware/error.middleware.js';
 import { Db } from 'mongodb';
+import { aRandomApiKey } from '../utils/test-utils.js';
 
-export const TEST_API_KEY = 'test-api-key-12345';
-
-export async function buildTestApp(options: FastifyServerOptions = {}): Promise<FastifyInstance> {
-  process.env.API_KEYS = TEST_API_KEY;
+export async function buildTestApp(apiKey?: string, options: FastifyServerOptions = {}): Promise<FastifyInstance> {
+  process.env.API_KEYS = apiKey || aRandomApiKey();
 
   const fastify = Fastify({
     logger: false,

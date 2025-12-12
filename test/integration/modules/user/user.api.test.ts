@@ -1,12 +1,13 @@
 import { FastifyInstance } from 'fastify';
-import { buildTestApp, TEST_API_KEY } from '../../../helpers/app.helper.js';
-import { aRandomString, aRandomEmail, aRandomInt } from '../../../utils/test-utils.js';
+import { buildTestApp } from '../../../helpers/app.helper.js';
+import { aRandomString, aRandomEmail, aRandomInt, aRandomApiKey } from '../../../utils/test-utils.js';
 
 describe('User API Integration Tests', () => {
   let app: FastifyInstance;
-
+  let testApiKey: string = aRandomApiKey();
+  
   beforeAll(async () => {
-    app = await buildTestApp();
+    app = await buildTestApp(testApiKey);
   });
 
   afterAll(async () => {
@@ -22,7 +23,7 @@ describe('User API Integration Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: endpoint,
-        headers: { 'x-api-key': TEST_API_KEY }
+        headers: { 'x-api-key': testApiKey }
       });
 
       expect(response.statusCode).toBe(200);
@@ -44,7 +45,7 @@ describe('User API Integration Tests', () => {
         url: endpoint,
         headers: {
           'content-type': 'application/json',
-          'x-api-key': TEST_API_KEY
+          'x-api-key': testApiKey
         },
         payload: { name: userName, email: userEmail, age: userAge }
       });
@@ -65,7 +66,7 @@ describe('User API Integration Tests', () => {
       const response = await app.inject({
         method: 'POST',
         url: endpoint,
-        headers: { 'x-api-key': TEST_API_KEY },
+        headers: { 'x-api-key': testApiKey },
         payload
       });
 
@@ -81,7 +82,7 @@ describe('User API Integration Tests', () => {
       const response = await app.inject({
         method: 'GET',
         url: endpoint,
-        headers: { 'x-api-key': TEST_API_KEY }
+        headers: { 'x-api-key': testApiKey }
       });
 
       expect(response.statusCode).toBe(400);
