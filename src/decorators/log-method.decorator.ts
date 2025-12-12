@@ -1,58 +1,36 @@
-import { FastifyBaseLogger } from 'fastify';
 import { getRequestLogger } from '@context/request-context.js';
+import { sanitizeLogArgs } from '@utils/log-sanitizer.js';
 
 export function LogMethod() {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (target: object, propertyKey: string, descriptor: PropertyDescriptor): void {
     const originalMethod = descriptor.value;
+    if (typeof originalMethod !== 'function') return;
 
-    descriptor.value = async function (...args: any[]) {
-      const className = target.constructor.name;
-      const baseLogger = getRequestLogger() || (this as any).logger as FastifyBaseLogger;
+    const className = target.constructor.name;
 
-      if (!baseLogger) {
+    descriptor.value = async function (...args: unknown[]) {
+      const logger = getRequestLogger();
+      if (!logger) {
+        console.warn(`No request logger for ${className}.${propertyKey}`);
         return originalMethod.apply(this, args);
       }
 
-      const methodLogger = baseLogger.child({ className, method: propertyKey });
-      methodLogger.info({ args: sanitizeArgs(args) }, `Entering ${className}.${propertyKey}`);
+      const methodLogger = logger.child({ method: propertyKey });
       const start = Date.now();
+
+      methodLogger.info({ args: sanitizeLogArgs(args) }, `→ ${className}.${propertyKey}`);
 
       try {
         const result = await originalMethod.apply(this, args);
-        const duration = Date.now() - start;
-        methodLogger.info({ duration }, `Exited ${className}.${propertyKey}`);
+        methodLogger.info({ duration: Date.now() - start }, `← ${className}.${propertyKey}`);
         return result;
       } catch (error) {
-        const duration = Date.now() - start;
-        methodLogger.error({ error, duration }, `Error in ${className}.${propertyKey}`);
+        methodLogger.error(
+          { error, duration: Date.now() - start },
+          `✗ ${className}.${propertyKey}`
+        );
         throw error;
       }
     };
-
-    return descriptor;
   };
-}
-
-function sanitizeArgs(args: any[]): any {
-  return args
-    .filter(arg => {
-      if (typeof arg === 'object' && arg !== null && 'child' in arg && 'info' in arg) {
-        return false;
-      }
-      return true;
-    })
-    .map(arg => {
-      if (typeof arg === 'object' && arg !== null) {
-        if (arg.raw || arg.log || arg.request) {
-          return '[FastifyRequest/Reply]';
-        }
-        if (arg.password) {
-          return { ...arg, password: '[REDACTED]' };
-        }
-        if (arg.headers && arg.headers['x-api-key']) {
-          return { ...arg, headers: { ...arg.headers, 'x-api-key': '[REDACTED]' } };
-        }
-      }
-      return arg;
-    });
 }
