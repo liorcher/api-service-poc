@@ -7,7 +7,10 @@ import { errorHandler } from '@/middleware/error.middleware.js';
 import { Db } from 'mongodb';
 import { aRandomApiKey } from '../utils/test-utils.js';
 
-export async function buildTestApp(apiKey?: string, options: FastifyServerOptions = {}): Promise<FastifyInstance> {
+export async function buildTestApp(
+  apiKey?: string,
+  options: FastifyServerOptions = {}
+): Promise<FastifyInstance> {
   process.env.API_KEYS = apiKey || aRandomApiKey();
 
   const fastify = Fastify({

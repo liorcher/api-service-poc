@@ -8,15 +8,18 @@ A production-ready Fastify API service with MongoDB, Pino logger, and modular ar
 - **Fastify** web framework with async/await support
 - **MongoDB** integration with @fastify/mongodb (dual auth: username/password + certificates)
 - **Pino** logger with pretty printing in development
+- **Logging decorators** (`@Logger`, `@LogMethod`) for zero-boilerplate logging
+- **Request context** with AsyncLocalStorage for distributed tracing
+- **Automatic log sanitization** for security and compliance
 - **Modular architecture** with controller-service-repository pattern
 - **Dependency Injection** with Awilix for auto-wiring and testability
 - **Path aliases** (`@config/*`, `@modules/*`, etc.) for cleaner imports
 - **Environment configuration** with dotenv and helper functions
-- **Jest** testing framework with unit and integration tests
+- **Jest** testing framework with parameterized tests and random data generators
+- **Comprehensive test utilities** (`aRandom*` functions) for robust testing
 - **ESLint & Prettier** for code quality and formatting
 - **JSON schema validation** for API requests
 - **Separation of concerns** with clean architecture principles
-- **Separate config files** for database, server, and logger
 - **ts-node with nodemon** for development with hot reload
 
 ## Project Structure
@@ -28,44 +31,149 @@ api-service-poc/
 │   │   ├── env.ts                   # Environment variables with helper functions
 │   │   ├── database.config.ts       # Database configuration
 │   │   ├── server.config.ts         # Server configuration
-│   │   ├── logger.config.ts         # Logger configuration
-│   │   └── index.ts                 # Config exports
+│   │   └── logger.config.ts         # Logger configuration
 │   ├── modules/                     # Feature modules
 │   │   └── user/                    # User module
 │   │       ├── user.controller.ts   # HTTP request handling
 │   │       ├── user.service.ts      # Business logic
 │   │       ├── user.repository.ts   # Data access layer
-│   │       └── user.routes.ts       # Route definitions
+│   │       ├── user.schema.ts       # Zod validation schemas
+│   │       ├── user.routes.ts       # Route definitions
+│   │       └── interfaces/          # TypeScript interfaces
+│   ├── decorators/                  # Logging decorators
+│   │   ├── logger.decorator.ts      # @Logger() decorator
+│   │   └── log-method.decorator.ts  # @LogMethod() decorator
+│   ├── context/                     # Request context (AsyncLocalStorage)
+│   │   └── request-context.ts       # Request context storage and helpers
+│   ├── middleware/                  # Request middleware
+│   │   ├── request-context.middleware.ts
+│   │   ├── error.middleware.ts
+│   │   ├── auth.middleware.ts
+│   │   └── validation.middleware.ts
+│   ├── constants/                   # Application constants
+│   │   └── log-sanitizer.constants.ts
+│   ├── utils/                       # Utility functions
+│   │   └── log-sanitizer.ts         # Log sanitization utility
+│   ├── di/                          # Dependency injection
+│   │   ├── container.ts             # Awilix container
+│   │   └── setup.ts                 # Container setup
 │   ├── plugins/                     # Fastify plugins
 │   │   └── mongodb.ts               # MongoDB connection plugin
 │   ├── routes/                      # Routes registry
 │   │   └── index.ts                 # Main routes file
 │   ├── types/                       # TypeScript type definitions
-│   │   ├── user.types.ts            # User-related types
 │   │   └── fastify.d.ts             # Fastify type augmentation
 │   ├── app.ts                       # Application setup
 │   └── server.ts                    # Server entry point
 ├── test/                            # Test files
 │   ├── unit/                        # Unit tests
-│   │   ├── config/
-│   │   │   └── env.test.ts          # Env helper tests
-│   │   └── modules/user/
-│   │       └── user.service.test.ts # Service unit tests
-│   └── integration/                 # Integration tests
-│       ├── app.test.ts              # App integration tests
-│       └── modules/user/
-│           └── user.api.test.ts     # User API integration tests
+│   │   ├── config/                  # Config tests
+│   │   ├── modules/user/            # User module tests
+│   │   └── utils/                   # Utility tests
+│   ├── integration/                 # Integration tests
+│   │   ├── app.test.ts              # App integration tests
+│   │   └── modules/user/            # User API tests
+│   ├── utils/                       # Test utility functions
+│   │   ├── test-utils.ts            # Random data generators (aRandom*)
+│   │   └── test-constants.ts        # Test constants
+│   ├── helpers/                     # Test setup helpers
+│   │   └── app.helper.ts            # buildTestApp()
+│   └── mocks/                       # Test mocks
+│       ├── logger.mock.ts           # Logger mock
+│       ├── mongodb.mock.ts          # MongoDB mock
+│       └── user-repository.mock.ts  # Repository mock
+├── docs/                            # Documentation
+│   ├── DECORATORS.md                # Logging decorators guide
+│   ├── REQUEST_CONTEXT.md           # Request context pattern
+│   ├── LOG_SANITIZATION.md          # Log sanitization guide
+│   ├── TESTING.md                   # Testing guide
+│   ├── DATABASE_AUTH.md             # Database authentication
+│   ├── PATH_ALIASES.md              # Path aliases guide
+│   └── DEPENDENCY_INJECTION.md      # DI guide
 ├── dist/                            # Compiled JavaScript (generated)
 ├── coverage/                        # Test coverage reports (generated)
 ├── .env.example                     # Example environment variables
 ├── .env                             # Environment variables (gitignored)
 ├── .prettierrc                      # Prettier configuration
-├── .prettierignore                  # Prettier ignore patterns
 ├── eslint.config.mjs                # ESLint configuration
 ├── tsconfig.json                    # TypeScript configuration
 ├── jest.config.ts                   # Jest configuration
 └── package.json
 ```
+
+## Advanced Features
+
+### Logging Decorators
+
+This project uses custom TypeScript decorators for zero-boilerplate logging:
+
+```typescript
+export class UserService {
+  @Logger()  // Injects class-specific logger
+  private readonly logger!: FastifyBaseLogger;
+
+  @LogMethod()  // Automatic entry/exit/error logging
+  async getUserById(id: string): Promise<User | null> {
+    return this.userRepository.findById(id);
+  }
+}
+```
+
+**Benefits:**
+- Automatic performance tracking
+- Request-scoped logging with request IDs
+- Sensitive data sanitization
+- Clean, readable code
+
+📖 See [docs/DECORATORS.md](docs/DECORATORS.md) for complete guide.
+
+### Request Context
+
+Per-request context using Node.js AsyncLocalStorage for distributed tracing:
+
+```typescript
+// Automatically available throughout the request lifecycle
+const logger = getRequestLogger();  // Includes request ID
+const reqId = getRequestId();       // Access request ID anywhere
+```
+
+📖 See [docs/REQUEST_CONTEXT.md](docs/REQUEST_CONTEXT.md) for implementation details.
+
+### Log Sanitization
+
+Automatic redaction of sensitive data for security and compliance:
+
+```typescript
+// Input:  { email: "user@example.com", password: "secret123" }
+// Logged: { email: "user@example.com", password: "[REDACTED]" }
+```
+
+**Protects:**
+- Passwords, API keys, tokens, secrets
+- Authorization headers
+- Nested sensitive data
+- PII for GDPR/PCI compliance
+
+📖 See [docs/LOG_SANITIZATION.md](docs/LOG_SANITIZATION.md) for security features.
+
+### Testing Utilities
+
+Comprehensive test helpers with random data generators:
+
+```typescript
+// No hardcoded test values - everything is random
+const user = aRandomUser();
+const email = aRandomEmail();
+const apiKey = aRandomApiKey();
+```
+
+**Features:**
+- 20+ random data generators (`aRandom*` functions)
+- Parameterized tests with `it.each()`
+- Test helpers and mocks
+- AAA pattern (Arrange-Act-Assert)
+
+📖 See [docs/TESTING.md](docs/TESTING.md) for complete testing guide.
 
 ## Getting Started
 
@@ -143,35 +251,24 @@ User endpoints:
 
 ### Testing
 
-Run all tests:
+📖 For comprehensive testing documentation including test utilities, helpers, patterns, and best practices, see [docs/TESTING.md](docs/TESTING.md).
+
+#### Quick Start
 
 ```bash
-npm test
+npm test                  # Run all tests (65 test cases)
+npm run test:unit         # Run unit tests only
+npm run test:integration  # Run integration tests only
+npm run test:coverage     # Generate coverage report
+npm run test:watch        # Watch mode
 ```
 
-Run only unit tests:
-
-```bash
-npm run test:unit
-```
-
-Run only integration tests:
-
-```bash
-npm run test:integration
-```
-
-Run tests in watch mode:
-
-```bash
-npm run test:watch
-```
-
-Generate coverage report:
-
-```bash
-npm run test:coverage
-```
+**Test Features:**
+- Parameterized tests with `it.each()`
+- Random data generators (`aRandom*` functions)
+- AAA pattern (Arrange-Act-Assert)
+- Shared mocks and helpers
+- 100% pass rate, 0 lint errors
 
 ## Environment Variables
 
@@ -233,6 +330,18 @@ The project includes two types of tests:
 
 - **Unit Tests** (`test/unit/`): Test individual components in isolation with mocked dependencies
 - **Integration Tests** (`test/integration/`): Test API endpoints and full application flow with real dependencies
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[DECORATORS.md](docs/DECORATORS.md)** - Logging decorators (@Logger, @LogMethod)
+- **[REQUEST_CONTEXT.md](docs/REQUEST_CONTEXT.md)** - Request context pattern with AsyncLocalStorage
+- **[LOG_SANITIZATION.md](docs/LOG_SANITIZATION.md)** - Automatic log sanitization for security
+- **[TESTING.md](docs/TESTING.md)** - Testing guide with utilities and patterns
+- **[DATABASE_AUTH.md](docs/DATABASE_AUTH.md)** - MongoDB authentication methods
+- **[PATH_ALIASES.md](docs/PATH_ALIASES.md)** - Path aliases configuration
+- **[DEPENDENCY_INJECTION.md](docs/DEPENDENCY_INJECTION.md)** - Dependency injection with Awilix
 
 ## License
 

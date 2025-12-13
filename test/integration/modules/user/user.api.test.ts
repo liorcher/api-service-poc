@@ -1,11 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../../helpers/app.helper.js';
-import { aRandomString, aRandomEmail, aRandomInt, aRandomApiKey } from '../../../utils/test-utils.js';
+import {
+  aRandomString,
+  aRandomEmail,
+  aRandomInt,
+  aRandomApiKey
+} from '../../../utils/test-utils.js';
 
 describe('User API Integration Tests', () => {
   let app: FastifyInstance;
   let testApiKey: string = aRandomApiKey();
-  
+
   beforeAll(async () => {
     app = await buildTestApp(testApiKey);
   });
