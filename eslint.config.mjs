@@ -7,7 +7,6 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   eslint.configs.recommended,
   {
-    // TypeScript files in src/ with project references
     files: ['src/**/*.ts'],
     languageOptions: {
       parser: tsparser,
@@ -48,7 +47,6 @@ export default [
     }
   },
   {
-    // Test files and config files without project references
     files: ['test/**/*.ts', '*.ts'],
     languageOptions: {
       parser: tsparser,
