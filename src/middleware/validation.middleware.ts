@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest, preValidationHookHandler } from 'fastify';
-import { ZodSchema } from 'zod';
+import { ZodSchema } from 'zod/v4';
 import { validationErrors } from '../metrics/collectors.js';
+import { createValidationErrorResponse } from '../types/api-response.schema.js';
 
 export function validateBody<T>(schema: ZodSchema<T>): preValidationHookHandler {
   return async (request: FastifyRequest, reply: FastifyReply) => {
@@ -11,11 +12,9 @@ export function validateBody<T>(schema: ZodSchema<T>): preValidationHookHandler 
         endpoint: request.routeOptions?.url || request.url,
         validation_type: 'body'
       });
-      reply.status(400).send({
-        success: false,
-        error: 'Validation error',
-        details: error
-      });
+      reply.status(400).send(
+        createValidationErrorResponse('Validation error', error as any)
+      );
     }
   };
 }
@@ -29,11 +28,9 @@ export function validateParams<T>(schema: ZodSchema<T>): preValidationHookHandle
         endpoint: request.routeOptions?.url || request.url,
         validation_type: 'params'
       });
-      reply.status(400).send({
-        success: false,
-        error: 'Validation error',
-        details: error
-      });
+      reply.status(400).send(
+        createValidationErrorResponse('Validation error', error as any)
+      );
     }
   };
 }

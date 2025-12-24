@@ -4,6 +4,12 @@ import { IUserService } from './interfaces/user-service.interface.js';
 import { CreateUserDto, UpdateUserDto } from './user.schema.js';
 import { LogMethod } from '@decorators/log-method.decorator.js';
 import { Logger } from '@decorators/logger.decorator.js';
+import {
+  createSuccessDataResponse,
+  createSuccessMessageResponse,
+  createErrorResponse,
+  createNotFoundResponse
+} from '@/types/api-response.schema.js';
 
 interface UserIdParams {
   id: string;
@@ -19,9 +25,9 @@ export class UserController {
   async getAllUsers(_request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const users = await this.userService.getAllUsers();
-      reply.send({ success: true, data: users });
+      reply.send(createSuccessDataResponse(users));
     } catch (_error) {
-      reply.status(500).send({ success: false, error: 'Failed to fetch users' });
+      reply.status(500).send(createErrorResponse('Failed to fetch users'));
     }
   }
 
@@ -35,17 +41,17 @@ export class UserController {
       const user = await this.userService.getUserById(id);
 
       if (!user) {
-        reply.status(404).send({ success: false, error: 'User not found' });
+        reply.status(404).send(createNotFoundResponse('User not found'));
         return;
       }
 
-      reply.send({ success: true, data: user });
+      reply.send(createSuccessDataResponse(user));
     } catch (error) {
       if (error instanceof Error && error.message === 'Invalid user ID format') {
-        reply.status(400).send({ success: false, error: error.message });
+        reply.status(400).send(createErrorResponse(error.message));
         return;
       }
-      reply.status(500).send({ success: false, error: 'Failed to fetch user' });
+      reply.status(500).send(createErrorResponse('Failed to fetch user'));
     }
   }
 
@@ -56,9 +62,9 @@ export class UserController {
   ): Promise<void> {
     try {
       const user = await this.userService.createUser(request.body);
-      reply.status(201).send({ success: true, data: user });
+      reply.status(201).send(createSuccessDataResponse(user));
     } catch (_error) {
-      reply.status(500).send({ success: false, error: 'Failed to create user' });
+      reply.status(500).send(createErrorResponse('Failed to create user'));
     }
   }
 
@@ -72,17 +78,17 @@ export class UserController {
       const user = await this.userService.updateUser(id, request.body);
 
       if (!user) {
-        reply.status(404).send({ success: false, error: 'User not found' });
+        reply.status(404).send(createNotFoundResponse('User not found'));
         return;
       }
 
-      reply.send({ success: true, data: user });
+      reply.send(createSuccessDataResponse(user));
     } catch (error) {
       if (error instanceof Error && error.message === 'Invalid user ID format') {
-        reply.status(400).send({ success: false, error: error.message });
+        reply.status(400).send(createErrorResponse(error.message));
         return;
       }
-      reply.status(500).send({ success: false, error: 'Failed to update user' });
+      reply.status(500).send(createErrorResponse('Failed to update user'));
     }
   }
 
@@ -96,17 +102,17 @@ export class UserController {
       const deleted = await this.userService.deleteUser(id);
 
       if (!deleted) {
-        reply.status(404).send({ success: false, error: 'User not found' });
+        reply.status(404).send(createNotFoundResponse('User not found'));
         return;
       }
 
-      reply.send({ success: true, message: 'User deleted successfully' });
+      reply.send(createSuccessMessageResponse('User deleted successfully'));
     } catch (error) {
       if (error instanceof Error && error.message === 'Invalid user ID format') {
-        reply.status(400).send({ success: false, error: error.message });
+        reply.status(400).send(createErrorResponse(error.message));
         return;
       }
-      reply.status(500).send({ success: false, error: 'Failed to delete user' });
+      reply.status(500).send(createErrorResponse('Failed to delete user'));
     }
   }
 }

@@ -8,6 +8,7 @@ import { metricsMiddleware, metricsResponseMiddleware } from '@/middleware/metri
 import { metricsRoutes } from '@routes/metrics.routes.js';
 import { Db } from 'mongodb';
 import { aRandomApiKey } from '../utils/test-utils.js';
+import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 
 export async function buildTestApp(
   apiKey?: string,
@@ -19,6 +20,10 @@ export async function buildTestApp(
     logger: { level: 'silent' },
     ...options
   });
+
+  // Set Zod validator and serializer for schema support
+  fastify.setValidatorCompiler(validatorCompiler);
+  fastify.setSerializerCompiler(serializerCompiler);
 
   fastify.addHook('onRequest', requestContextMiddleware);
   fastify.addHook('onRequest', metricsMiddleware);

@@ -1,5 +1,10 @@
 import { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
-import { ZodError } from 'zod';
+import { validationErrors } from '../metrics/collectors.js';
+import {
+  createErrorResponse,
+  createValidationErrorResponse,
+  createNotFoundResponse
+} from '../types/api-response.schema.js';
 
 export async function errorHandler(
   error: FastifyError | Error,
@@ -8,40 +13,28 @@ export async function errorHandler(
 ): Promise<void> {
   request.log.error(error);
 
-  if (error instanceof ZodError) {
-    reply.status(400).send({
-      success: false,
-      error: 'Validation error',
-      details: error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message,
-        code: err.code
-      }))
-    });
-    return;
-  }
-
   const fastifyError = error as FastifyError;
 
   if (fastifyError.statusCode === 404) {
-    reply.status(404).send({
-      success: false,
-      error: 'Not found'
-    });
+    reply.status(404).send(createNotFoundResponse());
     return;
   }
 
   if (fastifyError.validation) {
-    reply.status(400).send({
-      success: false,
-      error: 'Validation error',
-      details: fastifyError.validation
+    // Track validation error metrics
+    const validationType = fastifyError.validationContext || 'unknown';
+    validationErrors.inc({
+      endpoint: request.routeOptions?.url || request.url,
+      validation_type: validationType
     });
+
+    reply.status(400).send(
+      createValidationErrorResponse('Validation error', fastifyError.validation)
+    );
     return;
   }
 
-  reply.status(fastifyError.statusCode || 500).send({
-    success: false,
-    error: error.message || 'Internal server error'
-  });
+  reply.status(fastifyError.statusCode || 500).send(
+    createErrorResponse(error.message || 'Internal server error')
+  );
 }

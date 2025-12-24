@@ -1,8 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { container } from '@di/container.js';
+import { z } from 'zod/v4';
 
 export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/health/live', async () => {
+  fastify.get('/health/live', {
+    schema: {
+      tags: ['Health'],
+      summary: 'Liveness probe',
+      description: 'Check if the application process is running'
+    }
+  }, async () => {
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -10,7 +17,13 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
     };
   });
 
-  fastify.get('/health/ready', async (request, reply) => {
+  fastify.get('/health/ready', {
+    schema: {
+      tags: ['Health'],
+      summary: 'Readiness probe',
+      description: 'Check if the application is ready to serve traffic (database and container checks)'
+    }
+  }, async (request, reply) => {
     const startTime = Date.now();
     const checks = {
       database: { status: 'disconnected', responseTime: undefined as number | undefined },
@@ -51,7 +64,13 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
     }
   });
 
-  fastify.get('/health', async (_request, reply) => {
+  fastify.get('/health', {
+    schema: {
+      tags: ['Health'],
+      summary: 'Combined health check',
+      description: 'Get comprehensive health status including liveness and readiness checks'
+    }
+  }, async (_request, reply) => {
     const checks = {
       liveness: { status: 'healthy' as const },
       readiness: {
