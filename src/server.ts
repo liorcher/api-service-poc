@@ -1,8 +1,9 @@
+import { FastifyInstance } from 'fastify';
 import { buildApp } from './app.js';
 import { serverConfig } from '@config/index.js';
 
 async function start(): Promise<void> {
-  let fastify;
+  let fastify: FastifyInstance | undefined;
   try {
     fastify = await buildApp();
 
@@ -12,6 +13,19 @@ async function start(): Promise<void> {
     });
 
     fastify.log.info(`Server listening on ${serverConfig.host}:${serverConfig.port}`);
+
+    // Graceful shutdown
+    const signals = ['SIGTERM', 'SIGINT'] as const;
+    signals.forEach(signal => {
+      process.on(signal, async () => {
+        if (fastify) {
+          fastify.log.info(`Received ${signal}, closing server gracefully...`);
+          await fastify.close();
+          fastify.log.info('Server closed');
+        }
+        process.exit(0);
+      });
+    });
   } catch (err) {
     if (fastify) {
       fastify.log.error(err);

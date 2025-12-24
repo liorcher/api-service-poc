@@ -3,8 +3,8 @@ import type { MongoClientOptions } from 'mongodb';
 
 function buildMongoOptions(): MongoClientOptions {
   const baseOptions: MongoClientOptions = {
-    maxPoolSize: 10,
-    minPoolSize: 2
+    maxPoolSize: env.MONGODB_MAX_POOL_SIZE,
+    minPoolSize: env.MONGODB_MIN_POOL_SIZE
   };
 
   if (env.NODE_ENV === 'production') {

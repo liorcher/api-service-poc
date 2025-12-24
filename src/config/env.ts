@@ -57,6 +57,8 @@ export const env = {
   HOST: getEnvString('HOST', 'localhost'),
   LOG_LEVEL: getEnvString('LOG_LEVEL', 'info'),
   MONGODB_URI: getEnvString('MONGODB_URI', 'mongodb://localhost:27017/test-db'),
+  MONGODB_MAX_POOL_SIZE: getEnvNumber('MONGODB_MAX_POOL_SIZE', 10),
+  MONGODB_MIN_POOL_SIZE: getEnvNumber('MONGODB_MIN_POOL_SIZE', 2),
   DB_USERNAME: getEnvString('DB_USERNAME', ''),
   DB_PASSWORD: getEnvString('DB_PASSWORD', ''),
   DB_CERT_KEY_PATH: getEnvString('DB_CERT_KEY_PATH', ''),
