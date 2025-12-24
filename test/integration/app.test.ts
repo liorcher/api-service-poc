@@ -25,8 +25,9 @@ describe('App Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
       const payload = JSON.parse(response.payload);
-      expect(payload.status).toBe('ok');
+      expect(payload.status).toBe('healthy');
       expect(payload.timestamp).toBeDefined();
+      expect(payload.checks).toBeDefined();
     });
   });
 
