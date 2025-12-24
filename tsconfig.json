@@ -30,7 +30,8 @@
       "@routes/*": ["src/routes/*"],
       "@utils/*": ["src/utils/*"],
       "@decorators/*": ["src/decorators/*"],
-      "@context/*": ["src/context/*"]
+      "@context/*": ["src/context/*"],
+      "@metrics/*": ["src/metrics/*"]
     }
   },
   "include": ["src/**/*", "test/**/*"],

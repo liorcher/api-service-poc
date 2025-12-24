@@ -5,6 +5,8 @@ import mongodbPlugin from '@plugins/mongodb.js';
 import { registerRoutes } from '@routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { requestContextMiddleware } from './middleware/request-context.middleware.js';
+import { metricsMiddleware } from './middleware/metrics.middleware.js';
+import { metricsRoutes } from '@routes/metrics.routes.js';
 
 export async function buildApp(options: FastifyServerOptions = {}): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -14,10 +16,13 @@ export async function buildApp(options: FastifyServerOptions = {}): Promise<Fast
   });
 
   fastify.addHook('onRequest', requestContextMiddleware);
+  fastify.addHook('onRequest', metricsMiddleware);
 
   fastify.setErrorHandler(errorHandler);
 
   await fastify.register(mongodbPlugin);
+
+  await fastify.register(metricsRoutes);
 
   await fastify.register(registerRoutes);
 

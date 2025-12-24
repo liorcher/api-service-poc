@@ -21,6 +21,7 @@ const config: Config = {
     '^@utils/(.*)\\.(js|ts)$': '<rootDir>/src/utils/$1',
     '^@decorators/(.*)\\.(js|ts)$': '<rootDir>/src/decorators/$1',
     '^@context/(.*)\\.(js|ts)$': '<rootDir>/src/context/$1',
+    '^@metrics/(.*)\\.(js|ts)$': '<rootDir>/src/metrics/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1'
   }
 };
