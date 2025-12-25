@@ -8,6 +8,7 @@ A production-ready Fastify API service with MongoDB, Pino logger, and modular ar
 - **Fastify** web framework with async/await support
 - **MongoDB** integration with @fastify/mongodb (dual auth: username/password + certificates)
 - **Pino** logger with pretty printing in development
+- **Custom error handling** with typed error classes and automatic HTTP status codes
 - **Logging decorators** (`@Logger`, `@LogMethod`) for zero-boilerplate logging
 - **Request context** with AsyncLocalStorage for distributed tracing
 - **Automatic log sanitization** for security and compliance
@@ -15,10 +16,12 @@ A production-ready Fastify API service with MongoDB, Pino logger, and modular ar
 - **Dependency Injection** with Awilix for auto-wiring and testability
 - **Path aliases** (`@config/*`, `@modules/*`, etc.) for cleaner imports
 - **Environment configuration** with dotenv and helper functions
+- **Prometheus metrics** for monitoring and observability
+- **Swagger/OpenAPI** documentation for all endpoints
 - **Jest** testing framework with parameterized tests and random data generators
 - **Comprehensive test utilities** (`aRandom*` functions) for robust testing
 - **ESLint & Prettier** for code quality and formatting
-- **JSON schema validation** for API requests
+- **JSON schema validation** for API requests with Zod
 - **Separation of concerns** with clean architecture principles
 - **ts-node with nodemon** for development with hot reload
 
@@ -31,7 +34,15 @@ api-service-poc/
 │   │   ├── env.ts                   # Environment variables with helper functions
 │   │   ├── database.config.ts       # Database configuration
 │   │   ├── server.config.ts         # Server configuration
-│   │   └── logger.config.ts         # Logger configuration
+│   │   ├── logger.config.ts         # Logger configuration
+│   │   └── swagger.config.ts        # Swagger/OpenAPI configuration
+│   ├── errors/                      # Custom error classes
+│   │   ├── base.error.ts            # Base error class
+│   │   ├── api.error.ts             # HTTP error base class
+│   │   ├── invalid-id.error.ts      # Invalid ID format error
+│   │   ├── not-found.error.ts       # 404 errors
+│   │   ├── validation.error.ts      # Validation errors
+│   │   └── ...                      # Other error classes
 │   ├── modules/                     # Feature modules
 │   │   └── user/                    # User module
 │   │       ├── user.controller.ts   # HTTP request handling
@@ -46,14 +57,18 @@ api-service-poc/
 │   ├── context/                     # Request context (AsyncLocalStorage)
 │   │   └── request-context.ts       # Request context storage and helpers
 │   ├── middleware/                  # Request middleware
-│   │   ├── request-context.middleware.ts
-│   │   ├── error.middleware.ts
-│   │   ├── auth.middleware.ts
-│   │   └── validation.middleware.ts
+│   │   ├── request-context.middleware.ts  # Request context injection
+│   │   ├── error.middleware.ts      # Custom error handling
+│   │   ├── auth.middleware.ts       # API key authentication
+│   │   └── validation.middleware.ts # Request validation
+│   ├── metrics/                     # Prometheus metrics
+│   │   ├── registry.ts              # Metrics registry
+│   │   └── collectors.ts            # Metric collectors
 │   ├── constants/                   # Application constants
 │   │   └── log-sanitizer.constants.ts
 │   ├── utils/                       # Utility functions
-│   │   └── log-sanitizer.ts         # Log sanitization utility
+│   │   ├── log-sanitizer.ts         # Log sanitization utility
+│   │   └── error-guards.ts          # Error type guards
 │   ├── di/                          # Dependency injection
 │   │   ├── container.ts             # Awilix container
 │   │   └── setup.ts                 # Container setup
@@ -68,6 +83,7 @@ api-service-poc/
 ├── test/                            # Test files
 │   ├── unit/                        # Unit tests
 │   │   ├── config/                  # Config tests
+│   │   ├── errors/                  # Error class tests
 │   │   ├── modules/user/            # User module tests
 │   │   └── utils/                   # Utility tests
 │   ├── integration/                 # Integration tests
@@ -126,6 +142,34 @@ export class UserService {
 - Clean, readable code
 
 📖 See [docs/DECORATORS.md](docs/DECORATORS.md) for complete guide.
+
+### Custom Error Handling
+
+Type-safe error handling with custom error classes:
+
+```typescript
+import { InvalidIdError, NotFoundError } from '../errors/index.js';
+
+// Service
+if (!ObjectId.isValid(id)) {
+  throw new InvalidIdError(id, { method: 'getUserById' });
+}
+
+// Controller
+if (!user) {
+  throw new NotFoundError('User', id);
+}
+// Error middleware handles it automatically with correct status codes
+```
+
+**Benefits:**
+- Type-safe with `instanceof` checks
+- Automatic HTTP status codes
+- Context preservation for debugging
+- Client-safe responses
+- Error metrics tracking
+
+📖 See [docs/ERROR_HANDLING.md](docs/ERROR_HANDLING.md) for complete guide.
 
 ### Request Context
 
@@ -240,14 +284,24 @@ npm run format:check      # Check if files are formatted
 ### API Endpoints
 
 Health check:
-- `GET /health` - Returns service health status
+- `GET /health` - Combined health check
+- `GET /health/live` - Liveness probe
+- `GET /health/ready` - Readiness probe
 
-User endpoints:
+Metrics:
+- `GET /metrics` - Prometheus metrics
+
+Documentation:
+- `GET /docs` - Swagger UI
+
+User endpoints (requires API key):
 - `GET /api/users` - Get all users
 - `GET /api/users/:id` - Get user by ID
 - `POST /api/users` - Create a new user
 - `PUT /api/users/:id` - Update user
 - `DELETE /api/users/:id` - Delete user
+
+📖 See [docs/CREATING_ROUTES.md](docs/CREATING_ROUTES.md) for guide on creating new routes.
 
 ### Testing
 
@@ -256,7 +310,7 @@ User endpoints:
 #### Quick Start
 
 ```bash
-npm test                  # Run all tests (65 test cases)
+npm test                  # Run all tests (119 test cases)
 npm run test:unit         # Run unit tests only
 npm run test:integration  # Run integration tests only
 npm run test:coverage     # Generate coverage report
@@ -264,11 +318,13 @@ npm run test:watch        # Watch mode
 ```
 
 **Test Features:**
+- 119 tests with 100% pass rate
 - Parameterized tests with `it.each()`
 - Random data generators (`aRandom*` functions)
 - AAA pattern (Arrange-Act-Assert)
+- Comprehensive error testing
 - Shared mocks and helpers
-- 100% pass rate, 0 lint errors
+- 0 lint errors
 
 ## Environment Variables
 
@@ -276,7 +332,14 @@ npm run test:watch        # Watch mode
 - `PORT` - Server port (default: 3000)
 - `HOST` - Server host (default: localhost)
 - `MONGODB_URI` - MongoDB connection string (required)
+- `MONGODB_MAX_POOL_SIZE` - MongoDB max pool size (default: 10)
+- `MONGODB_MIN_POOL_SIZE` - MongoDB min pool size (default: 2)
+- `DB_USERNAME` - MongoDB username (optional)
+- `DB_PASSWORD` - MongoDB password (optional)
+- `DB_CERT_KEY_PATH` - MongoDB certificate key path for production (optional)
+- `DB_CA_PATH` - MongoDB CA file path for production (optional)
 - `LOG_LEVEL` - Pino log level (default: info)
+- `API_KEYS` - Comma-separated API keys for authentication (optional)
 
 ## Architecture
 
@@ -335,10 +398,15 @@ The project includes two types of tests:
 
 Comprehensive documentation is available in the `docs/` directory:
 
+### Core Features
+- **[ERROR_HANDLING.md](docs/ERROR_HANDLING.md)** - Custom error handling system
+- **[CREATING_ROUTES.md](docs/CREATING_ROUTES.md)** - Step-by-step guide for creating new routes
 - **[DECORATORS.md](docs/DECORATORS.md)** - Logging decorators (@Logger, @LogMethod)
 - **[REQUEST_CONTEXT.md](docs/REQUEST_CONTEXT.md)** - Request context pattern with AsyncLocalStorage
 - **[LOG_SANITIZATION.md](docs/LOG_SANITIZATION.md)** - Automatic log sanitization for security
 - **[TESTING.md](docs/TESTING.md)** - Testing guide with utilities and patterns
+
+### Configuration
 - **[DATABASE_AUTH.md](docs/DATABASE_AUTH.md)** - MongoDB authentication methods
 - **[PATH_ALIASES.md](docs/PATH_ALIASES.md)** - Path aliases configuration
 - **[DEPENDENCY_INJECTION.md](docs/DEPENDENCY_INJECTION.md)** - Dependency injection with Awilix
