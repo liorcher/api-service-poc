@@ -61,6 +61,9 @@ function getApiKeys(): string[] {
 export const env = {
   NODE_ENV: getEnvString('NODE_ENV', 'development'),
   PORT: getEnvNumber('PORT', 3000),
+  get METRICS_PORT() {
+    return getEnvNumber('METRICS_PORT', this.PORT);
+  },
   HOST: getEnvString('HOST', 'localhost'),
   LOG_LEVEL: getEnvString('LOG_LEVEL', 'info'),
   MONGODB_URI: getEnvString('MONGODB_URI', 'mongodb://localhost:27017/test-db'),
@@ -73,4 +76,4 @@ export const env = {
   get API_KEYS() {
     return getApiKeys();
   }
-} as const;
+};

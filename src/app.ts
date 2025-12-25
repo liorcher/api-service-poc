@@ -1,6 +1,6 @@
 import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
 import { randomUUID } from 'crypto';
-import { loggerConfig } from '@config/index.js';
+import { loggerConfig, env } from '@config/index.js';
 import mongodbPlugin from '@plugins/mongodb.js';
 import { registerRoutes } from '@routes/index.js';
 import { errorHandler } from './middleware/error.middleware.js';
@@ -35,7 +35,10 @@ export async function buildApp(options: FastifyServerOptions = {}): Promise<Fast
 
   await fastify.register(mongodbPlugin);
 
-  await fastify.register(metricsRoutes);
+  // Register metrics on main app only if using same port
+  if (env.METRICS_PORT === env.PORT) {
+    await fastify.register(metricsRoutes);
+  }
 
   await fastify.register(registerRoutes);
 

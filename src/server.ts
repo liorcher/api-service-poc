@@ -1,9 +1,12 @@
-import { FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import { buildApp } from './app.js';
-import { serverConfig } from '@config/index.js';
+import { serverConfig, env } from '@config/index.js';
+import { metricsRoutes } from '@routes/metrics.routes.js';
 
 async function start(): Promise<void> {
   let fastify: FastifyInstance | undefined;
+  let metricsServer: FastifyInstance | undefined;
+
   try {
     fastify = await buildApp();
 
@@ -14,6 +17,28 @@ async function start(): Promise<void> {
 
     fastify.log.info(`Server listening on ${serverConfig.host}:${serverConfig.port}`);
 
+    // Start separate metrics server if on different port
+    if (env.METRICS_PORT !== serverConfig.port) {
+      metricsServer = Fastify({
+        logger: {
+          level: env.LOG_LEVEL || 'info'
+        }
+      });
+
+      await metricsServer.register(metricsRoutes);
+
+      await metricsServer.listen({
+        port: env.METRICS_PORT,
+        host: serverConfig.host
+      });
+
+      fastify.log.info(`Metrics server listening on ${serverConfig.host}:${env.METRICS_PORT}`);
+    } else {
+      fastify.log.info(
+        `Metrics available at http://${serverConfig.host}:${serverConfig.port}/metrics`
+      );
+    }
+
     // Graceful shutdown
     const signals = ['SIGTERM', 'SIGINT'] as const;
     signals.forEach(signal => {
@@ -22,6 +47,10 @@ async function start(): Promise<void> {
           fastify.log.info(`Received ${signal}, closing server gracefully...`);
           await fastify.close();
           fastify.log.info('Server closed');
+        }
+        if (metricsServer) {
+          await metricsServer.close();
+          fastify?.log.info('Metrics server closed');
         }
         process.exit(0);
       });

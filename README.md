@@ -330,6 +330,7 @@ npm run test:watch        # Watch mode
 
 - `NODE_ENV` - Environment (development/production)
 - `PORT` - Server port (default: 3000)
+- `METRICS_PORT` - Metrics endpoint port (default: 3000, same as PORT)
 - `HOST` - Server host (default: localhost)
 - `MONGODB_URI` - MongoDB connection string (required)
 - `MONGODB_MAX_POOL_SIZE` - MongoDB max pool size (default: 10)
