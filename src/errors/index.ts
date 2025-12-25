@@ -1,7 +1,7 @@
 export { BaseError } from './base.error.js';
 export { ApiError } from './api.error.js';
 export { ValidationError } from './validation.error.js';
-export { BadRequestError } from './bad-request.error.ts';
+export { BadRequestError } from './bad-request.error.js';
 export { UnauthorizedError } from './unauthorized.error.js';
 export { ForbiddenError } from './forbidden.error.js';
 export { NotFoundError } from './not-found.error.js';

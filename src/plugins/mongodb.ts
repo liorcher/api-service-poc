@@ -14,7 +14,7 @@ async function mongodbConnector(fastify: FastifyInstance): Promise<void> {
 
   fastify.addHook('onReady', async function () {
     if (!fastify.mongo.db) {
-      throw new DatabaseError('MongoDB database instance not available');
+      throw new DatabaseError('MongoDB database instance not available', 'MONGODB_NOT_AVAILABLE');
     }
     setupContainer(fastify.mongo.db, fastify.log);
     fastify.log.info('MongoDB connected successfully');
