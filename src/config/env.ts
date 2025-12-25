@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { ConfigurationError } from '../errors/configuration.error.js';
 
 dotenv.config();
 
@@ -9,7 +10,7 @@ export function getEnvString(key: string, defaultValue?: string): string {
     if (defaultValue !== undefined) {
       return defaultValue;
     }
-    throw new Error(`Environment variable ${key} is required but not set`);
+    throw new ConfigurationError(`Environment variable ${key} is required but not set`, { key });
   }
 
   return value;
@@ -22,13 +23,19 @@ export function getEnvNumber(key: string, defaultValue?: number): number {
     if (defaultValue !== undefined) {
       return defaultValue;
     }
-    throw new Error(`Environment variable ${key} is required but not set`);
+    throw new ConfigurationError(`Environment variable ${key} is required but not set`, { key });
   }
 
   const numValue = Number(value);
 
   if (isNaN(numValue)) {
-    throw new Error(`Environment variable ${key} must be a valid number, got: ${value}`);
+    throw new ConfigurationError(
+      `Environment variable ${key} must be a valid number, got: ${value}`,
+      {
+        key,
+        value
+      }
+    );
   }
 
   return numValue;

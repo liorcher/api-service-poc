@@ -1,11 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { getUserController } from '@di/setup.js';
-import {
-  createUserSchema,
-  updateUserSchema,
-  userIdParamSchema,
-  userResponseSchema
-} from './user.schema.js';
+import { createUserSchema, updateUserSchema, userIdParamSchema } from './user.schema.js';
 
 export async function userRoutes(fastify: FastifyInstance): Promise<void> {
   const getController = () => getUserController();

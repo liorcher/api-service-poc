@@ -1,5 +1,6 @@
 import { env } from './env.js';
 import type { MongoClientOptions } from 'mongodb';
+import { ConfigurationError } from '../errors/configuration.error.js';
 
 function buildMongoOptions(): MongoClientOptions {
   const baseOptions: MongoClientOptions = {
@@ -9,7 +10,9 @@ function buildMongoOptions(): MongoClientOptions {
 
   if (env.NODE_ENV === 'production') {
     if (!env.DB_CERT_KEY_PATH) {
-      throw new Error('Certificate auth mode requires DB_CERT_KEY_PATH to be set');
+      throw new ConfigurationError('Certificate auth mode requires DB_CERT_KEY_PATH to be set', {
+        nodeEnv: env.NODE_ENV
+      });
     }
 
     try {
@@ -24,7 +27,9 @@ function buildMongoOptions(): MongoClientOptions {
 
       return { ...baseOptions, ...tlsOptions };
     } catch (error) {
-      throw new Error(`Failed to configure certificate authentication: ${error}`);
+      throw new ConfigurationError(`Failed to configure certificate authentication: ${error}`, {
+        originalError: error instanceof Error ? error.message : String(error)
+      });
     }
   } else {
     if (env.DB_USERNAME && env.DB_PASSWORD) {

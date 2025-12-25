@@ -7,6 +7,7 @@ import {
   aRandomObjectId,
   aRandomString
 } from '../../../utils/test-utils.js';
+import { InvalidIdError } from '../../../../src/errors/invalid-id.error.js';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -45,7 +46,7 @@ describe('UserService', () => {
     it('testGetUserByIdShouldThrowErrorWhenInvalidIdFormat', async () => {
       const invalidId = aRandomString();
 
-      await expect(userService.getUserById(invalidId)).rejects.toThrow('Invalid user ID format');
+      await expect(userService.getUserById(invalidId)).rejects.toThrow(InvalidIdError);
     });
   });
 
@@ -85,9 +86,7 @@ describe('UserService', () => {
       const invalidId = aRandomString();
       const updateData = { name: aRandomString() };
 
-      await expect(userService.updateUser(invalidId, updateData)).rejects.toThrow(
-        'Invalid user ID format'
-      );
+      await expect(userService.updateUser(invalidId, updateData)).rejects.toThrow(InvalidIdError);
     });
   });
 
@@ -105,7 +104,7 @@ describe('UserService', () => {
     it('testDeleteUserShouldThrowErrorWhenInvalidIdFormat', async () => {
       const invalidId = aRandomString();
 
-      await expect(userService.deleteUser(invalidId)).rejects.toThrow('Invalid user ID format');
+      await expect(userService.deleteUser(invalidId)).rejects.toThrow(InvalidIdError);
     });
   });
 });

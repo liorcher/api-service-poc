@@ -6,6 +6,7 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "strict": true,
+    "useUnknownInCatchVariables": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

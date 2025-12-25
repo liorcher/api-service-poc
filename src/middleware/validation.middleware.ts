@@ -12,9 +12,7 @@ export function validateBody<T>(schema: ZodSchema<T>): preValidationHookHandler 
         endpoint: request.routeOptions?.url || request.url,
         validation_type: 'body'
       });
-      reply.status(400).send(
-        createValidationErrorResponse('Validation error', error as any)
-      );
+      reply.status(400).send(createValidationErrorResponse('Validation error', error as any));
     }
   };
 }
@@ -28,9 +26,7 @@ export function validateParams<T>(schema: ZodSchema<T>): preValidationHookHandle
         endpoint: request.routeOptions?.url || request.url,
         validation_type: 'params'
       });
-      reply.status(400).send(
-        createValidationErrorResponse('Validation error', error as any)
-      );
+      reply.status(400).send(createValidationErrorResponse('Validation error', error as any));
     }
   };
 }

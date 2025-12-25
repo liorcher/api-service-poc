@@ -44,3 +44,10 @@ export const validationErrors = new Counter({
   labelNames: ['endpoint', 'validation_type'],
   registers: [metricsRegistry]
 });
+
+export const customErrorsByType = new Counter({
+  name: 'api_custom_errors_total',
+  help: 'Total number of custom errors by type',
+  labelNames: ['error_type', 'error_code', 'endpoint'],
+  registers: [metricsRegistry]
+});

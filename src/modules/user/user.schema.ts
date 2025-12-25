@@ -11,19 +11,41 @@ export const userSchema = z.object({
 });
 
 export const createUserSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').describe("User's full name"),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name must be less than 100 characters')
+    .describe("User's full name"),
   email: z.string().email('Invalid email format').describe("User's email address"),
-  age: z.number().int('Age must be an integer').positive('Age must be positive').optional().describe("User's age (optional)")
+  age: z
+    .number()
+    .int('Age must be an integer')
+    .positive('Age must be positive')
+    .optional()
+    .describe("User's age (optional)")
 });
 
 export const updateUserSchema = z.object({
-  name: z.string().min(1, 'Name must not be empty').max(100, 'Name must be less than 100 characters').optional().describe("User's full name"),
+  name: z
+    .string()
+    .min(1, 'Name must not be empty')
+    .max(100, 'Name must be less than 100 characters')
+    .optional()
+    .describe("User's full name"),
   email: z.string().email('Invalid email format').optional().describe("User's email address"),
-  age: z.number().int('Age must be an integer').positive('Age must be positive').optional().describe("User's age (optional)")
+  age: z
+    .number()
+    .int('Age must be an integer')
+    .positive('Age must be positive')
+    .optional()
+    .describe("User's age (optional)")
 });
 
 export const userIdParamSchema = z.object({
-  id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId format').describe('MongoDB ObjectId (24-character hex string)')
+  id: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId format')
+    .describe('MongoDB ObjectId (24-character hex string)')
 });
 
 /**

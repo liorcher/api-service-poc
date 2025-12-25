@@ -3,6 +3,7 @@ import fastifyMongodb from '@fastify/mongodb';
 import { FastifyInstance } from 'fastify';
 import { databaseConfig } from '@config/index.js';
 import { setupContainer } from '@di/setup.js';
+import { DatabaseError } from '../errors/database.error.js';
 
 async function mongodbConnector(fastify: FastifyInstance): Promise<void> {
   fastify.register(fastifyMongodb, {
@@ -13,7 +14,7 @@ async function mongodbConnector(fastify: FastifyInstance): Promise<void> {
 
   fastify.addHook('onReady', async function () {
     if (!fastify.mongo.db) {
-      throw new Error('MongoDB database instance not available');
+      throw new DatabaseError('MongoDB database instance not available');
     }
     setupContainer(fastify.mongo.db, fastify.log);
     fastify.log.info('MongoDB connected successfully');

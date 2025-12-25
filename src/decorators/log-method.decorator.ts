@@ -29,7 +29,10 @@ export function LogMethod() {
           logger.child({ method: propertyKey }).info({ duration }, `← ${className}.${propertyKey}`);
         }
 
-        methodDuration.observe({ class_name: className, method_name: propertyKey, status }, duration);
+        methodDuration.observe(
+          { class_name: className, method_name: propertyKey, status },
+          duration
+        );
         methodInvocations.inc({ class_name: className, method_name: propertyKey, status });
 
         return result;
@@ -38,10 +41,15 @@ export function LogMethod() {
         const duration = (Date.now() - start) / 1000;
 
         if (logger) {
-          logger.child({ method: propertyKey }).error({ error, duration }, `✗ ${className}.${propertyKey}`);
+          logger
+            .child({ method: propertyKey })
+            .error({ error, duration }, `✗ ${className}.${propertyKey}`);
         }
 
-        methodDuration.observe({ class_name: className, method_name: propertyKey, status }, duration);
+        methodDuration.observe(
+          { class_name: className, method_name: propertyKey, status },
+          duration
+        );
         methodInvocations.inc({ class_name: className, method_name: propertyKey, status });
 
         throw error;

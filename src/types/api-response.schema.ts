@@ -12,11 +12,13 @@ export const successResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
 
 /**
  * Generic error response
- * Format: { success: false, error: string }
+ * Format: { success: false, error: string, code?: string, timestamp?: string }
  */
 export const errorResponseSchema = z.object({
   success: z.literal(false),
-  error: z.string()
+  error: z.string(),
+  code: z.string().optional(),
+  timestamp: z.string().optional()
 });
 
 /**
@@ -58,9 +60,15 @@ export type SuccessMessageResponse = z.infer<typeof successMessageResponseSchema
 /**
  * Helper functions to construct responses that match the schemas
  */
-export const createErrorResponse = (error: string): ErrorResponse => ({
+export const createErrorResponse = (
+  error: string,
+  code?: string,
+  timestamp?: string
+): ErrorResponse => ({
   success: false,
-  error
+  error,
+  ...(code && { code }),
+  ...(timestamp && { timestamp })
 });
 
 export const createValidationErrorResponse = (

@@ -22,9 +22,10 @@ export const swaggerOptions: FastifyDynamicSwaggerOptions = {
     },
     servers: [
       {
-        url: env.NODE_ENV === 'production'
-          ? 'https://your-production-url.com'  // Update with actual production URL
-          : `http://${env.HOST}:${env.PORT}`,
+        url:
+          env.NODE_ENV === 'production'
+            ? 'https://your-production-url.com' // Update with actual production URL
+            : `http://${env.HOST}:${env.PORT}`,
         description: env.NODE_ENV === 'production' ? 'Production' : 'Development'
       }
     ],
@@ -72,8 +73,8 @@ export const swaggerUiOptions: FastifySwaggerUiOptions = {
     tryItOutEnabled: true // Enable "Try it out" by default
   },
   staticCSP: true,
-  transformStaticCSP: (header) => header,
-  transformSpecification: (swaggerObject) => {
+  transformStaticCSP: header => header,
+  transformSpecification: swaggerObject => {
     return swaggerObject;
   },
   transformSpecificationClone: true

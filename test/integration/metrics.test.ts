@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../helpers/app.helper.js';
-import { aRandomApiKey, aRandomString, aRandomEmail, aRandomInt } from '../utils/test-utils.js';
+import { aRandomApiKey, aRandomString } from '../utils/test-utils.js';
 
 describe('Metrics Integration Tests', () => {
   let app: FastifyInstance;
